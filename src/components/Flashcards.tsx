@@ -1,30 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { VOCAB, KANJI, GRAMMAR, type VocabItem, type KanjiItem, type GrammarItem } from "@/data";
+import { useI18n } from "@/lib/i18n";
 
 type CardMode = "vocab" | "kanji" | "grammar";
 type CardData = VocabItem | KanjiItem | GrammarItem;
 
-const ALL_DATA: Record<CardMode, CardData[]> = {
-  vocab: VOCAB,
-  kanji: KANJI,
-  grammar: GRAMMAR,
+const ALL_DATA: Record<CardMode, CardData[]> = { vocab: VOCAB, kanji: KANJI, grammar: GRAMMAR };
+const MODE_LABELS: Record<CardMode, { fr: string; en: string; emoji: string }> = {
+  vocab: { fr: "Vocabulaire", en: "Vocabulary", emoji: "📖" },
+  kanji: { fr: "Kanji", en: "Kanji", emoji: "漢字" },
+  grammar: { fr: "Grammaire", en: "Grammar", emoji: "🔤" },
 };
 
-const MODE_LABELS: Record<CardMode, string> = {
-  vocab: "Vocabulaire",
-  kanji: "Kanji",
-  grammar: "Grammaire",
-};
-
-interface CardState {
-  level: number;
-  nextReview: string;
-  reviewed: number;
-}
+interface CardState { level: number; nextReview: string; reviewed: number; }
 
 export default function Flashcards() {
+  const { t } = useI18n();
   const [mode, setMode] = useState<CardMode>("vocab");
   const [session, setSession] = useState<number[]>([]);
   const [idx, setIdx] = useState(0);
@@ -40,47 +33,27 @@ export default function Flashcards() {
     localStorage.setItem("n5sensei_cards", JSON.stringify(cards));
   }, [cards]);
 
-  useEffect(() => {
-    const data = ALL_DATA[mode];
-    const indices = data.map((_, i) => i);
-    shuffle(indices);
-    setSession(indices);
-    setIdx(0);
-    setFlipped(false);
-  }, [mode]);
-
   function getCardState(i: number): CardState {
     const key = `${mode}_${i}`;
     return cards[key] || { level: 0, nextReview: new Date().toISOString().slice(0, 10), reviewed: 0 };
   }
 
-  function cardDue(i: number) {
-    return getCardState(i).nextReview <= new Date().toISOString().slice(0, 10);
-  }
-
-  function buildSession() {
+  const buildSession = useCallback(() => {
     const data = ALL_DATA[mode];
-    let indices = data.map((_, i) => i).filter((i) => cardDue(i));
+    let indices = data.map((_, i) => i).filter((i) => getCardState(i).nextReview <= new Date().toISOString().slice(0, 10));
     if (indices.length === 0) indices = data.map((_, i) => i);
-    shuffle(indices);
+    shuffleArr(indices);
     setSession(indices);
     setIdx(0);
     setFlipped(false);
-  }
+  }, [mode, cards]);
 
-  useEffect(() => {
-    buildSession();
-  }, [mode]);
+  useEffect(() => { buildSession(); }, [buildSession]);
 
-  function flip() {
-    if (!flipped) setFlipped(true);
-  }
+  function flip() { if (!flipped) setFlipped(true); }
 
   function rate(level: number) {
-    if (!flipped) {
-      flip();
-      return;
-    }
+    if (!flipped) { flip(); return; }
     if (idx >= session.length) return;
     const i = session[idx];
     const key = `${mode}_${i}`;
@@ -103,11 +76,13 @@ export default function Flashcards() {
 
   if (session.length === 0 || idx >= session.length) {
     return (
-      <div className="text-center py-20">
-        <div className="text-5xl mb-4">🎉</div>
-        <p className="text-lg font-semibold">Session terminée !</p>
-        <button onClick={buildSession} className="mt-4 px-6 py-2 bg-[#c0392b] text-white rounded-xl font-medium">
-          Recommencer
+      <div className="text-center py-16">
+        <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-red-500 to-orange-400 shadow-lg mb-6">
+          <span className="text-5xl">🎉</span>
+        </div>
+        <p className="text-xl font-bold mb-6">{t("session_done")}</p>
+        <button onClick={buildSession} className="px-8 py-3 bg-gradient-to-r from-red-500 to-orange-400 text-white rounded-xl font-bold hover:shadow-lg transition-all">
+          {t("restart")}
         </button>
       </div>
     );
@@ -118,57 +93,65 @@ export default function Flashcards() {
 
   return (
     <div>
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-2 mb-6">
         {(["vocab", "kanji", "grammar"] as CardMode[]).map((m) => (
           <button
             key={m}
             onClick={() => setMode(m)}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-              mode === m ? "bg-[#c0392b] text-white" : "border border-gray-200 dark:border-gray-700 text-gray-500"
+            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold transition-all ${
+              mode === m
+                ? "bg-gradient-to-r from-red-500 to-orange-400 text-white shadow-md"
+                : "border-2 border-gray-200 dark:border-gray-700 text-gray-500 hover:border-red-300"
             }`}
           >
-            {MODE_LABELS[m]}
+            {MODE_LABELS[m].emoji} {t(m === "vocab" ? "vocabulaire" : m === "kanji" ? "kanji" : "grammaire")}
           </button>
         ))}
       </div>
 
       <div
         onClick={flip}
-        className="bg-white dark:bg-[#252220] rounded-2xl p-8 shadow-lg min-h-[280px] flex flex-col items-center justify-center text-center cursor-pointer select-none"
+        className="bg-white dark:bg-[#252220] rounded-2xl p-8 shadow-lg min-h-[300px] flex flex-col items-center justify-center text-center cursor-pointer select-none border border-gray-100 dark:border-gray-800 hover:shadow-xl transition-all"
       >
-        <span className="inline-block px-3 py-1 rounded-full bg-[#c0392b] text-white text-xs font-semibold mb-3">
-          {MODE_LABELS[mode]}
+        <span className="inline-block px-4 py-1.5 rounded-full bg-gradient-to-r from-red-500 to-orange-400 text-white text-xs font-bold mb-4 uppercase tracking-wide">
+          {MODE_LABELS[mode].emoji} {t(mode === "vocab" ? "vocabulaire" : mode === "kanji" ? "kanji" : "grammaire")}
         </span>
-        <div className="text-4xl font-bold mb-2">{card.jp}</div>
-        {flipped && (
+        <div className="text-5xl font-bold mb-3">{card.jp}</div>
+        {flipped ? (
           <>
             <div className="text-xl text-gray-500 mb-1">{isKanji && (card as KanjiItem).read}</div>
-            <div className="text-base text-gray-500">{card.mean}</div>
+            <div className="text-base text-gray-400">{card.mean}</div>
           </>
+        ) : (
+          <p className="text-sm text-gray-400 mt-4">Clique pour retourner</p>
         )}
-        {!flipped && <p className="text-sm text-gray-400 mt-4">Clique pour retourner</p>}
       </div>
 
-      <div className="flex gap-3 mt-4">
-        <button onClick={() => rate(0)} className="flex-1 py-3 bg-[#e74c3c] text-white rounded-xl font-semibold">
-          💢 Dur
+      <div className="flex gap-3 mt-5">
+        <button onClick={() => rate(0)} className="flex-1 py-3.5 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition-colors">
+          💢 {t("hard")}
         </button>
-        <button onClick={() => rate(1)} className="flex-1 py-3 bg-[#f39c12] text-white rounded-xl font-semibold">
-          👌 OK
+        <button onClick={() => rate(1)} className="flex-1 py-3.5 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 transition-colors">
+          👌 {t("ok")}
         </button>
-        <button onClick={() => rate(2)} className="flex-1 py-3 bg-[#27ae60] text-white rounded-xl font-semibold">
-          ⚡ Facile
+        <button onClick={() => rate(2)} className="flex-1 py-3.5 bg-green-500 text-white rounded-xl font-bold hover:bg-green-600 transition-colors">
+          ⚡ {t("easy")}
         </button>
       </div>
 
-      <div className="text-center mt-3 text-sm text-gray-400">
-        {idx + 1} / {session.length}
+      <div className="text-center mt-4">
+        <div className="inline-flex items-center gap-2 text-sm text-gray-400">
+          <div className="h-1.5 w-24 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-red-500 to-orange-400 rounded-full" style={{ width: `${((idx + 1) / session.length) * 100}%` }} />
+          </div>
+          {idx + 1} / {session.length}
+        </div>
       </div>
     </div>
   );
 }
 
-function shuffle(arr: number[]) {
+function shuffleArr(arr: number[]) {
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
