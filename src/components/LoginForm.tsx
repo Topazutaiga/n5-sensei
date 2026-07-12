@@ -22,13 +22,17 @@ export default function LoginForm() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    setDebug("Démarrage...");
+    setDebug("Connexion à Supabase...");
 
     try {
-      setDebug("URL: " + (process.env.NEXT_PUBLIC_SUPABASE_URL || "MANQUANTE"));
-      setDebug("KEY: " + (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "OK" : "MANQUANTE"));
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout 10s - Supabase ne répond pas")), 10000)
+      );
 
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const authPromise = supabase.auth.signInWithPassword({ email, password });
+
+      const { data, error } = await Promise.race([authPromise, timeoutPromise]) as any;
+
       if (error) {
         setError("Erreur Supabase : " + error.message);
         setLoading(false);
