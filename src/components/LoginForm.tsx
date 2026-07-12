@@ -33,7 +33,7 @@ export default function LoginForm() {
         return;
       }
       if (data.session) {
-        window.location.href = "/dashboard";
+        router.push("/dashboard");
       } else {
         setError("Pas de session créée.");
         setLoading(false);
