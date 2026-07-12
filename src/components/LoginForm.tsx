@@ -18,13 +18,23 @@ export default function LoginForm() {
     setLoading(true);
     setError("");
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      setError(error.message);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
+      if (data.session) {
+        router.push("/dashboard");
+      } else {
+        setError("Pas de session créée. Vérifie tes identifiants.");
+        setLoading(false);
+      }
+    } catch (err: any) {
+      setError("Erreur inattendue : " + (err.message || String(err)));
       setLoading(false);
-      return;
     }
-    router.push("/dashboard");
   }
 
   return (
