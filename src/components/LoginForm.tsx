@@ -10,19 +10,13 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [debug, setDebug] = useState("");
   const router = useRouter();
   const supabase = createSupabaseClient();
-
-  const envOk = typeof window !== "undefined" &&
-    !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
-    setDebug("Connexion à Supabase...");
 
     try {
       const timeoutPromise = new Promise<never>((_, reject) =>
@@ -39,8 +33,7 @@ export default function LoginForm() {
         return;
       }
       if (data.session) {
-        setDebug("Session OK, redirection...");
-        router.push("/dashboard");
+        window.location.href = "/dashboard";
       } else {
         setError("Pas de session créée.");
         setLoading(false);
@@ -69,15 +62,6 @@ export default function LoginForm() {
               {error}
             </div>
           )}
-          {debug && (
-            <div className="bg-blue-50 dark:bg-blue-900/20 text-blue-600 text-xs p-2 rounded-xl mb-4 font-mono">
-              {debug}
-            </div>
-          )}
-          <div className="text-xs text-gray-400 mb-3 font-mono">
-            URL: {process.env.NEXT_PUBLIC_SUPABASE_URL ? "✓" : "✗ MANQUANTE"} | 
-            KEY: {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "✓" : "✗ MANQUANTE"}
-          </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1.5">Email</label>
