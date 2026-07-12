@@ -22,8 +22,8 @@ function DashboardNav({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (!data.user) router.push("/auth/login");
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) router.push("/auth/login");
       else setLoading(false);
     });
   }, [supabase, router]);
