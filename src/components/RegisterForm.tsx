@@ -1,0 +1,118 @@
+"use client";
+
+import { useState } from "react";
+import { createSupabaseClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+
+export default function RegisterForm() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const supabase = createSupabaseClient();
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard`,
+      },
+    });
+
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+      return;
+    }
+
+    setSuccess(true);
+    setLoading(false);
+  }
+
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#faf7f2] dark:bg-[#1a1816] px-4">
+        <div className="w-full max-w-sm text-center">
+          <div className="bg-white dark:bg-[#252220] rounded-2xl p-8 shadow-lg">
+            <div className="text-4xl mb-4">✉️</div>
+            <h2 className="text-lg font-semibold mb-2">Vérifie ta boîte mail</h2>
+            <p className="text-sm text-gray-500">
+              On t&apos;a envoyé un lien de confirmation. Clique dessus pour activer ton compte.
+            </p>
+            <Link
+              href="/auth/login"
+              className="inline-block mt-4 text-sm text-[#c0392b] font-medium"
+            >
+              Retour à la connexion
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#faf7f2] dark:bg-[#1a1816] px-4">
+      <div className="w-full max-w-sm">
+        <h1 className="text-2xl font-bold text-center mb-8">
+          N5 <span className="text-[#c0392b]">Sensei</span>
+        </h1>
+        <div className="bg-white dark:bg-[#252220] rounded-2xl p-8 shadow-lg">
+          <h2 className="text-lg font-semibold mb-6">Créer un compte</h2>
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/20 text-red-600 text-sm p-3 rounded-lg mb-4">
+              {error}
+            </div>
+          )}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 focus:border-[#c0392b] outline-none transition-colors bg-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">
+                Mot de passe
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 dark:border-gray-700 focus:border-[#c0392b] outline-none transition-colors bg-transparent"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-[#c0392b] text-white rounded-xl font-semibold hover:bg-[#e74c3c] transition-colors disabled:opacity-50"
+            >
+              {loading ? "Création..." : "Créer mon compte"}
+            </button>
+          </form>
+          <p className="text-center text-sm text-gray-500 mt-4">
+            Déjà un compte ?{" "}
+            <Link href="/auth/login" className="text-[#c0392b] font-medium">
+              Se connecter
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
