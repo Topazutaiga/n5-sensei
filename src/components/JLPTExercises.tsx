@@ -121,13 +121,15 @@ export default function JLPTExercises({ defaultType = "all", forcedModule }: { d
 
   if (qIdx >= questions.length) {
     const pct = Math.round((correct / questions.length) * 100);
+    const encouragements = ["すごい！ 🎉", "よくできました！ 👏", "がんばったね！ 💪", "すばらしい！ ⭐", "Perfect！ 🌸"];
+    const msg = encouragements[Math.floor(Math.random() * encouragements.length)];
     return (
       <div className="text-center py-16">
         <div className="inline-flex items-center justify-center w-28 h-28 rounded-full bg-gradient-to-br from-red-500 to-orange-400 mb-6 shadow-lg">
           <span className="text-4xl font-bold text-white">{pct}%</span>
         </div>
-        <div className="text-2xl font-bold mb-1">{correct} / {questions.length}</div>
-        <p className="text-gray-500 mb-6">{t("correct_answers")}</p>
+        <div className="text-2xl font-bold mb-1">{msg}</div>
+        <div className="text-lg text-gray-500 mb-6">{correct} / {questions.length}</div>
         <button onClick={() => setQuestions([])} className="px-8 py-3 bg-gradient-to-r from-red-500 to-orange-400 text-white rounded-xl font-semibold hover:shadow-lg transition-all">
           {t("restart")}
         </button>

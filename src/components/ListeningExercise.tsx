@@ -18,6 +18,8 @@ export default function ListeningExercise({ forcedModule, forcedMode }: { forced
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
   const [rate, setRate] = useState(0.8);
+  const [showReview, setShowReview] = useState(false);
+  const [results, setResults] = useState<{ item: JLTPListeningItem; correct: boolean }[]>([]);
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const [voicesLoaded, setVoicesLoaded] = useState(false);
 
@@ -62,6 +64,8 @@ export default function ListeningExercise({ forcedModule, forcedMode }: { forced
     setAnswered(false);
     setSelectedAnswer(null);
     setPlaying(false);
+    setResults([]);
+    setShowReview(false);
   }, [data, forcedModule]);
 
   useEffect(() => { if (mounted) { if (forcedMode) setMode(forcedMode); } }, [forcedMode, mounted]);
@@ -88,7 +92,9 @@ export default function ListeningExercise({ forcedModule, forcedMode }: { forced
     if (answered || !currentItem) return;
     setAnswered(true);
     setSelectedAnswer(idx);
-    if (idx === currentItem.answerIndex) setCorrect((c) => c + 1);
+    const isCorrect = idx === currentItem.answerIndex;
+    if (isCorrect) setCorrect((c) => c + 1);
+    setResults((prev) => [...prev, { item: currentItem, correct: isCorrect }]);
     setTimeout(() => {
       setQIdx((i) => i + 1);
       setAnswered(false);
@@ -100,16 +106,59 @@ export default function ListeningExercise({ forcedModule, forcedMode }: { forced
 
   if (qIdx >= items.length && items.length > 0) {
     const pct = Math.round((correct / items.length) * 100);
+    const encouragements = ["すごい！ 🎉", "よくできました！ 👏", "がんばったね！ 💪", "すばらしい！ ⭐", "Perfect！ 🌸"];
+    const msg = encouragements[Math.floor(Math.random() * encouragements.length)];
+
+    if (showReview) {
+      return (
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold">{lang === "en" ? "Session Review" : "Révision de la session"}</h3>
+            <button onClick={() => setShowReview(false)} className="px-4 py-2 rounded-full text-xs font-semibold border border-gray-200 dark:border-gray-700 text-gray-500 hover:border-red-300">
+              {lang === "en" ? "Back to results" : "Retour aux résultats"}
+            </button>
+          </div>
+          <div className="space-y-4">
+            {results.map((r, i) => (
+              <div key={i} className={`bg-white dark:bg-[#252220] rounded-xl p-4 border ${r.correct ? "border-green-200 dark:border-green-800" : "border-red-200 dark:border-red-800"}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className={r.correct ? "text-green-600" : "text-red-600"}>{r.correct ? "✓" : "✗"}</span>
+                  <span className="text-sm font-semibold">{r.item.question}</span>
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">{r.item.audio}</div>
+                <div className="text-xs text-gray-400">
+                  {r.item.options[r.item.answerIndex].emoji} {r.item.options[r.item.answerIndex].text}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-3 mt-6">
+            <button onClick={() => setShowReview(false)} className="flex-1 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl font-semibold text-gray-500 hover:border-red-300">
+              {lang === "en" ? "Back" : "Retour"}
+            </button>
+            <button onClick={init} className="flex-1 py-3 bg-gradient-to-r from-red-500 to-orange-400 text-white rounded-xl font-bold hover:shadow-lg transition-all">
+              {t("restart")}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="text-center py-16">
         <div className="inline-flex items-center justify-center w-28 h-28 rounded-full bg-gradient-to-br from-red-500 to-orange-400 mb-6 shadow-lg">
           <span className="text-4xl font-bold text-white">{pct}%</span>
         </div>
-        <div className="text-2xl font-bold mb-1">{correct} / {items.length}</div>
-        <p className="text-gray-500 mb-6">{t("correct_answers")}</p>
-        <button onClick={init} className="px-8 py-3 bg-gradient-to-r from-red-500 to-orange-400 text-white rounded-xl font-bold hover:shadow-lg transition-all">
-          {t("restart")}
-        </button>
+        <div className="text-2xl font-bold mb-1">{msg}</div>
+        <div className="text-lg text-gray-500 mb-6">{correct} / {items.length}</div>
+        <div className="flex gap-3 justify-center">
+          <button onClick={() => setShowReview(true)} className="px-6 py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl font-semibold text-gray-500 hover:border-red-300">
+            📝 {lang === "en" ? "Review" : "Réviser"}
+          </button>
+          <button onClick={init} className="px-8 py-3 bg-gradient-to-r from-red-500 to-orange-400 text-white rounded-xl font-bold hover:shadow-lg transition-all">
+            {t("restart")}
+          </button>
+        </div>
       </div>
     );
   }
@@ -210,6 +259,10 @@ export default function ListeningExercise({ forcedModule, forcedMode }: { forced
           <div className="mt-5 pt-5 border-t border-gray-100 dark:border-gray-800 space-y-1">
             <div className={`text-base font-bold ${selectedAnswer === currentItem.answerIndex ? "text-green-600" : "text-red-600"}`}>
               {selectedAnswer === currentItem.answerIndex ? "✓ 正解 !" : "✗ 不正解"}
+            </div>
+            <p className="text-sm text-gray-400 mb-1">{lang === "en" ? "What was said:" : "Ce qui était dit :"}</p>
+            <div className="text-base font-semibold text-gray-700 dark:text-gray-300 mb-1">
+              {currentItem.audio}
             </div>
             <p className="text-sm text-gray-400 mb-1">{lang === "en" ? "Correct answer:" : "Bonne réponse :"}</p>
             <div className="text-lg font-bold text-green-600">

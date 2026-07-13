@@ -275,15 +275,15 @@ function generateGrammarChoice(): JLPTQuestion[] {
     });
   }
 
-  // Fill with grammar data
+  // Fill with grammar data - ask for meaning instead of reading
   for (const g of grammarPool) {
     if (questions.length >= 350) break;
-    const wrongs = pickRandom(GRAMMAR, 3, g).map((x) => x.read);
+    const wrongs = pickRandom(GRAMMAR, 3, g).map((x) => x.mean);
     questions.push({
       type: "grammar_choice",
-      question: `「${g.jp}」の読み方は？`,
-      options: shuffle([g.read, ...wrongs]),
-      answer: g.read,
+      question: `「${g.jp}」の意味は？`,
+      options: shuffle([g.mean, ...wrongs]),
+      answer: g.mean,
     });
   }
 
@@ -311,15 +311,15 @@ function generateReadingComp(): JLPTQuestion[] {
     { text: "きのうは どようびでした。\nともだちと えいがかんに いきました。\nえいがは おもしろかったです。\nひるごはんは ラーメンを たべました。", context: "Hier, c'était samedi. Avec un ami, on est allé au cinéma. Le film était intéressant. Le déjeuner, on a mangé des ramen.", question: "きのう、なにを しましたか。", answer: "えいがをみました", options: ["えいがをみました", "べんきょうしました", "うんどうをしました", "かいものをしました"] },
     { text: "たけしさんは がくせいです。\nまいにち がっこうに いきます。\nにほんごが すきです。\nともだちと いっしょに べんきょうします。", context: "Takeshi est étudiant. Chaque jour, il va à l'école. Il aime le japonais. Il étudie avec ses amis.", question: "たけしさんは なにが すきですか。", answer: "にほんご", options: ["にほんご", "えいが", "おんがく", "うんどう"] },
     { text: "わたしは まいにち あさ おきます。\nあさごはんを たべます。\nでんしゃで がっこうに いきます。\nごご べんきょうします。", context: "Je me lève tous les jours le matin. Je mange le petit-déjeuner. Je vais à l'école en train. L'après-midi, j'étudie.", question: "わたしは なにで がっこうに いきますか。", answer: "でんしゃ", options: ["でんしゃ", "じてんしゃ", "バス", "あるきて"] },
-    { text: "きのうは にちようびでした。\nいえで すんで べんきょうしました。\nよるは カレーを つくりました。\nとても おいしかったです。", context: "Hier, c'était dimanche. J'ai étudié à la maison. Le soir, j'ai fait du curry. C'était très bon.", question: "きのう よる なにを しましたか。", answer: "カレーをつくりました", options: ["カレーをつくりました", "べんきょうしました", "おんがくをきました", "でんごんをかけました"] },
+    { text: "きのうは にちようびでした。\nいえで すんで べんきょうしました。\nよるは カレーを つくりました。\nとても おいしかったです。", context: "Hier, c'était dimanche. J'ai étudié à la maison. Le soir, j'ai fait du curry. C'était très bon.", question: "きのう よる なにを しましたか。", answer: "カレーをつくりました", options: ["カレーをつくりました", "べんきょうしました", "おんがくをききました", "でんわをかけました"] },
     { text: "あしたは きんようびです。\nともだちと いっしょに こうえんで うんどうを します。\nひるごはんは いえで たべます。\nごご としょかんに いきます。", context: "Demain est vendredi. Avec un ami, on fait du sport au parc. Le déjeuner, on mange à la maison. L'après-midi, on va à la bibliothèque.", question: "あした ごご なにを しますか。", answer: "としょかんにいきます", options: ["としょかんにいきます", "こうえんでうんどうをします", "いえでたべます", "がっこうにいきます"] },
     { text: "ゆうきさんは まいにち あさ おきます。\nあさごはんを たべて、がっこうに いきます。\nごご べんきょうします。\nよる おふろに はいります。", context: "Yuki se lève tous les jours le matin. Il mange le petit-déjeuner et va à l'école. L'après-midi, il étudie. Le soir, il prend un bain.", question: "ゆうきさんは よる なにを しますか。", answer: "おふろにはいります", options: ["おふろにはいります", "べんきょうします", "がっこうにいきます", "あさごはんをたべます"] },
-    { text: "きのうは げつようびでした。\nまいにちとおり がっこうに いきました。\nごご ともだちと おんがくを きました。\nよる いえで べんきょうしました。", context: "Hier, c'était lundi. Comme d'habitude, je suis allé à l'école. L'après-midi, j'ai écouté de la musique avec un ami. Le soir, j'ai étudié à la maison.", question: "きのう ごご なにを しましたか。", answer: "おんがくをきました", options: ["おんがくをきました", "べんきょうしました", "がっこうにいきました", "うんどうをしました"] },
+    { text: "きのうは げつようびでした。\nまいにちどおり がっこうに いきました。\nごご ともだちと おんがくを きました。\nよる いえで べんきょうしました。", context: "Hier, c'était lundi. Comme d'habitude, je suis allé à l'école. L'après-midi, j'ai écouté de la musique avec un ami. Le soir, j'ai étudié à la maison.", question: "きのう ごご なにを しましたか。", answer: "おんがくをききました", options: ["おんがくをききました", "べんきょうしました", "がっこうにいきました", "うんどうをしました"] },
     { text: "わたしは まいにち あさ 6じに おきます。\nあさごはんを たべます。\n7じに でんしゃで がっこうに いきます。\nごご5じに かえります。", context: "Je me lève tous les jours à 6h du matin. Je mange le petit-déjeuner. À 7h, je vais à l'école en train. Je rentre à 17h.", question: "わたしは なんじに おきますか。", answer: "6じ", options: ["6じ", "7じ", "5じ", "8じ"] },
     { text: "ともだちの たけしさんは がくせいです。\nまいにち がっこうで にほんごを べんきょうします。\nしゅうまつは えいがを みます。\nすきな たべものは カレーです。", context: "Mon ami Takeshi est étudiant. Chaque jour, il étudie le japonais à l'école. Le week-end, il regarde des films. Son plat préféré, c'est le curry.", question: "たけしさんの すきな たべものは なんですか。", answer: "カレー", options: ["カレー", "ラーメン", "すし", "てんぷら"] },
     { text: "わたしは まいにち おんがくを ききます。\nともだちと いっしょに おんがくを きます。\nとても たのしいです。\nすきな おんがくは にほんごの おんがくです。", context: "J'écoute de la musique tous les jours. J'écoute de la musique avec un ami. C'est très amusant. Ma musique préférée, c'est la musique japonaise.", question: "すきな おんがくは なんですか。", answer: "にほんごのおんがく", options: ["にほんごのおんがく", "いんぐりすのおんがく", "ふらんすのおんがく", "にほんごのおえいが"] },
-    { text: "まいにち あさ おきて、あさごはんを たべます。\nでんしゃで がっこうに いきます。\nごご べんきょうします。\nよる おふろに はいって、ねます。", context: "Chaque jour, je me lève le matin et je mange le petit-déjeuner. Je vais à l'école en train. L'après-midi, j'étudie. Le soir, je prends un bain et je dors.", question: "わたしは よる なにを しますか。", answer: "おふろにはいって、ねます", options: ["おふろにはいって、ねます", "べんきょうします", "おんがくをきます", "でんごんをかけます"] },
-    { text: "きのうは もくようびでした。\nともだちと こうえんで うんどうを しました。\nひるごはんは カレーを たべました。\nよる いえで テレビを みました。", context: "Hier, c'était jeudi. J'ai fait du sport au parc avec un ami. Le déjeuner, on a mangé du curry. Le soir, j'ai regardé la télé à la maison.", question: "きのう よる なにを しましたか。", answer: "テレビをみました", options: ["テレビをみました", "うんどうをしました", "べんきょうしました", "おんがくをきました"] },
+    { text: "まいにち あさ おきて、あさごはんを たべます。\nでんしゃで がっこうに いきます。\nごご べんきょうします。\nよる おふろに はいって、ねます。", context: "Chaque jour, je me lève le matin et je mange le petit-déjeuner. Je vais à l'école en train. L'après-midi, j'étudie. Le soir, je prends un bain et je dors.", question: "わたしは よる なにを しますか。", answer: "おふろにはいって、ねます", options: ["おふろにはいって、ねます", "べんきょうします", "おんがくをききます", "でんわをかけます"] },
+    { text: "きのうは もくようびでした。\nともだちと こうえんで うんどうを しました。\nひるごはんは カレーを たべました。\nよる いえで テレビを みました。", context: "Hier, c'était jeudi. J'ai fait du sport au parc avec un ami. Le déjeuner, on a mangé du curry. Le soir, j'ai regardé la télé à la maison.", question: "きのう よる なにを しましたか。", answer: "テレビをみました", options: ["テレビをみました", "うんどうをしました", "べんきょうしました", "おんがくをききました"] },
     { text: "わたしの ともだちは がくせいです。\nまいにち がっこうに いきます。\nにほんごが すきです。\nともだちと いっしょに べんきょうします。\nすきな たべものは すしです。", context: "Mon ami est étudiant. Chaque jour, il va à l'école. Il aime le japonais. Il étudie avec ses amis. Son plat préféré, c'est le sushi.", question: "ともだちは なにが すきですか。", answer: "すし", options: ["すし", "カレー", "ラーメン", "てんぷら"] },
     { text: "まいにち あさ おきます。\nあさごはんを たべます。\nがっこうに いきます。\nごご べんきょうします。\nよる おんがくを きます。\nおそく ねます。", context: "Chaque jour, je me lève le matin. Je mange le petit-déjeuner. Je vais à l'école. L'après-midi, j'étudie. Le soir, j'écoute de la musique. Je me couche tard.", question: "わたしは おそく なにを しますか。", answer: "ねます", options: ["ねます", "おきます", "たべます", "べんきょうします"] },
     { text: "きのうは どようびでした。\nともだちと いっしょに かいものを しました。\nひるごはんは ラーメンを たべました。\nよる おえいがを みました。\nとても たのしかったです。", context: "Hier, c'était samedi. J'ai fait les courses avec un ami. Le déjeuner, on a mangé des ramen. Le soir, on a regardé un film. C'était très amusant.", question: "きのう ひるごはんに なにを たべましたか。", answer: "ラーメン", options: ["ラーメン", "カレー", "すし", "てんぷら"] },
