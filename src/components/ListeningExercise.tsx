@@ -128,6 +128,14 @@ export default function ListeningExercise() {
         ))}
       </div>
 
+      {/* Progress bar */}
+      <div className="flex items-center gap-2 mb-4">
+        <span className="text-sm text-gray-400 font-medium">{qIdx + 1} / {items.length}</span>
+        <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-red-500 to-orange-400 rounded-full transition-all duration-300" style={{ width: `${((qIdx + 1) / items.length) * 100}%` }} />
+        </div>
+      </div>
+
       {/* Scene emoji (dialogue mode) */}
       {currentItem.scene && (
         <div className="text-center mb-4">
@@ -238,16 +246,6 @@ export default function ListeningExercise() {
             </button>
           );
         })}
-      </div>
-
-      {/* Progress */}
-      <div className="text-center mt-4">
-        <div className="inline-flex items-center gap-2 text-sm text-gray-400">
-          <div className="h-1.5 w-24 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-red-500 to-orange-400 rounded-full" style={{ width: `${((qIdx + 1) / items.length) * 100}%` }} />
-          </div>
-          {qIdx + 1} / {items.length}
-        </div>
       </div>
     </div>
   );

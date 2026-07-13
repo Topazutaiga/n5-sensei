@@ -1,10 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f5f0ea;
+  --background: #fdf6f0;
   --foreground: #2c2c2c;
   --accent: #c7363e;
   --accent-light: #e05a5e;
+  --sakura: #f5c6c6;
+  --sakura-light: #fce8e8;
 }
 
 @theme inline {
@@ -15,7 +17,7 @@
 }
 
 body {
-  background: linear-gradient(180deg, #f5f0ea 0%, #ece4d9 50%, #e8dfd2 100%);
+  background: linear-gradient(180deg, #fdf6f0 0%, #fceee8 40%, #f8e6de 100%);
   min-height: 100vh;
   color: var(--foreground);
   font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
@@ -27,21 +29,47 @@ body {
     --foreground: #e8ddd0;
     --accent: #c7363e;
     --accent-light: #e05a5e;
+    --sakura: #4a3030;
+    --sakura-light: #2a2020;
   }
   body {
-    background: linear-gradient(180deg, #1c1a18 0%, #22201d 50%, #1a1816 100%);
+    background: linear-gradient(180deg, #1c1a18 0%, #221e1b 40%, #1a1816 100%);
   }
 }
 
-/* Washi paper texture overlay */
-body::before {
-  content: "";
+/* Sakura petals floating animation */
+@keyframes fall1 {
+  0% { transform: translate(0, -20px) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.15; }
+  90% { opacity: 0.15; }
+  100% { transform: translate(80px, 100vh) rotate(360deg); opacity: 0; }
+}
+@keyframes fall2 {
+  0% { transform: translate(0, -20px) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.12; }
+  90% { opacity: 0.12; }
+  100% { transform: translate(-60px, 100vh) rotate(-300deg); opacity: 0; }
+}
+@keyframes fall3 {
+  0% { transform: translate(0, -20px) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.1; }
+  90% { opacity: 0.1; }
+  100% { transform: translate(40px, 100vh) rotate(420deg); opacity: 0; }
+}
+
+.sakura-petal {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  width: 12px;
+  height: 12px;
+  border-radius: 50% 0 50% 0;
+  background: #f5c6c6;
   pointer-events: none;
   z-index: 9999;
 }
+
+.sakura-petal:nth-child(3n+1) { animation: fall1 8s linear infinite; width: 10px; height: 10px; background: #f5c6c6; }
+.sakura-petal:nth-child(3n+2) { animation: fall2 11s linear infinite; width: 14px; height: 14px; background: #fad5d5; }
+.sakura-petal:nth-child(3n+3) { animation: fall3 9s linear infinite; width: 11px; height: 11px; background: #f0b8b8; }
 
 @keyframes pulse {
   0%, 100% { transform: scaleY(1); }

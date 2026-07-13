@@ -44,7 +44,12 @@ function ensure4opts(opts: { emoji: string; text: string }[]): { emoji: string; 
   return opts;
 }
 
-// === もんだい４ (Quick Response) templates for PHRASES ===
+function shuffleOptions(item: JLTPListeningItem): JLTPListeningItem {
+  const correct = item.options[item.answerIndex];
+  const shuffled = shuffle(item.options);
+  const newIdx = shuffled.findIndex((o) => o.emoji === correct.emoji && o.text === correct.text);
+  return { ...item, options: shuffled, answerIndex: newIdx };
+}
 const Q4_TEMPLATES: { phrase: string; options: { emoji: string; text: string }[]; answerIndex: number }[] = [
   { phrase: "おはようございます。", options: [{ emoji: "🙂", text: "おはようございます。" }, { emoji: "😴", text: "おやすみなさい。" }, { emoji: "👋", text: "さようなら。" }], answerIndex: 0 },
   { phrase: "こんにちは。", options: [{ emoji: "🙂", text: "こんにちは。" }, { emoji: "🍚", text: "いただきます。" }, { emoji: "🚶", text: "いってきます。" }], answerIndex: 0 },
@@ -242,6 +247,7 @@ function generatePhrases(): JLTPListeningItem[] {
   }
 
   items.forEach((item) => { item.options = ensure4opts(item.options); });
+  items.forEach((item, i, arr) => { arr[i] = shuffleOptions(item); });
   return shuffle(items).slice(0, 350);
 }
 
@@ -306,6 +312,7 @@ function generateDialogues(): JLTPListeningItem[] {
   }
 
   items.forEach((item) => { item.options = ensure4opts(item.options); });
+  items.forEach((item, i, arr) => { arr[i] = shuffleOptions(item); });
   return shuffle(items).slice(0, 350);
 }
 
