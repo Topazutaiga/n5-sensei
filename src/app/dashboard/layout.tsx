@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { createSupabaseClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { I18nProvider, useI18n } from "@/lib/i18n";
+import SakuraPetals from "@/components/SakuraPetals";
 
 const NAV_ITEMS = [
   { href: "/dashboard", labelKey: "dashboard" as const, icon: "📊" },
@@ -44,6 +45,7 @@ function DashboardNav({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen">
+      <SakuraPetals />
       <header className="sticky top-0 z-50 backdrop-blur-lg bg-white/80 dark:bg-[#1a1816]/80 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center justify-between px-4 py-3 max-w-lg mx-auto">
           <Link href="/dashboard" className="text-xl font-bold">

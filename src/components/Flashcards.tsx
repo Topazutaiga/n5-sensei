@@ -233,9 +233,11 @@ export default function Flashcards() {
         {flipped ? (
           <>
             <div className="text-xl text-gray-500 mb-1">{reading}</div>
-            <div className="text-base text-gray-400">{meaning}</div>
-            {lang === "en" && mode === "vocab" && (
-              <div className="text-xs text-gray-400 mt-2 italic">({(card as VocabItem).mean})</div>
+            <div className="text-base text-gray-400">
+              {lang === "en" ? `🔊 ${reading}` : meaning}
+            </div>
+            {lang === "en" && (
+              <div className="text-xs text-gray-400 mt-1">FR: {meaning}</div>
             )}
           </>
         ) : (

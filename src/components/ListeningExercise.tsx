@@ -6,10 +6,11 @@ import { useI18n } from "@/lib/i18n";
 
 type AudioMode = "phrase" | "dialogue";
 
-export default function ListeningExercise() {
+export default function ListeningExercise({ forcedModule, forcedMode }: { forcedModule?: number; forcedMode?: AudioMode }) {
   const { t, lang } = useI18n();
   const [mounted, setMounted] = useState(false);
-  const [mode, setMode] = useState<AudioMode>("phrase");
+  const [mode, setMode] = useState<AudioMode>(forcedMode || "phrase");
+  const [processingModule, setProcessingModule] = useState<number | undefined>(undefined);
   const [items, setItems] = useState<JLTPListeningItem[]>([]);
   const [qIdx, setQIdx] = useState(0);
   const [correct, setCorrect] = useState(0);
@@ -50,14 +51,20 @@ export default function ListeningExercise() {
   }, [items, qIdx]);
 
   const init = useCallback(() => {
-    setItems(shuffle(data).slice(0, 10));
+    if (forcedModule === undefined) {
+      setItems(shuffle(data).slice(0, 10));
+    } else {
+      const start = (forcedModule - 1) * 10;
+      setItems(data.slice(start, start + 10));
+    }
     setQIdx(0);
     setCorrect(0);
     setAnswered(false);
     setSelectedAnswer(null);
     setPlaying(false);
-  }, [data]);
+  }, [data, forcedModule]);
 
+  useEffect(() => { if (mounted) { if (forcedMode) setMode(forcedMode); } }, [forcedMode, mounted]);
   useEffect(() => { if (mounted) init(); }, [init, mounted]);
 
   function play() {
@@ -111,21 +118,12 @@ export default function ListeningExercise() {
 
   return (
     <div>
-      {/* Mode selector */}
-      <div className="flex gap-2 mb-6">
-        {(["phrase", "dialogue"] as AudioMode[]).map((m) => (
-          <button
-            key={m}
-            onClick={() => setMode(m)}
-            className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all ${
-              mode === m
-                ? "bg-gradient-to-r from-red-500 to-orange-400 text-white shadow-md"
-                : "border-2 border-gray-200 dark:border-gray-700 text-gray-500 hover:border-red-300"
-            }`}
-          >
-            {m === "phrase" ? "📝 " + (lang === "en" ? "Phrases" : "Phrases") : "💬 " + (lang === "en" ? "Dialogues" : "Dialogues")}
-          </button>
-        ))}
+      {/* Mode indicator + module */}
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-gradient-to-r from-red-500 to-orange-400 text-white">
+          {mode === "phrase" ? "📝 " + t("phrases") : "💬 " + t("dialogues")}
+          {forcedModule && <span> — {t("module")} {forcedModule}</span>}
+        </span>
       </div>
 
       {/* Progress bar */}
@@ -148,7 +146,7 @@ export default function ListeningExercise() {
       {/* Audio player card */}
       <div className="bg-white dark:bg-[#252220] rounded-2xl p-8 shadow-lg text-center mb-6 border border-gray-100 dark:border-gray-800">
         <span className="inline-block px-4 py-1.5 rounded-full bg-gradient-to-r from-red-500 to-orange-400 text-white text-xs font-bold mb-4 uppercase tracking-wide">
-          {mode === "dialogue" ? (lang === "en" ? "Dialogue" : "Dialogue N5") : (lang === "en" ? "Phrase" : "Phrase N5")}
+          {mode === "dialogue" ? t("dialogues") + " N5" : t("phrases") + " N5"}
         </span>
 
         <div className="min-h-[60px] flex items-center justify-center mb-4">
@@ -226,7 +224,7 @@ export default function ListeningExercise() {
 
       {/* Answer choices (JLPT format: large emoji + text cards) */}
       <div className="text-xs text-gray-400 text-center mb-3 font-medium uppercase tracking-wide">
-        {mode === "phrase" ? (lang === "en" ? "Choose the best response (もんだい4)" : "Choisis la meilleure réponse (もんだい4)") : (lang === "en" ? "Choose the answer (もんだい1/3)" : "Choisis la réponse (もんだい1/3)")}
+        {mode === "phrase" ? t("choose_answer") : t("choose_answer")}
       </div>
       <div className="grid grid-cols-2 gap-3">
         {currentItem.options.map((opt, i) => {

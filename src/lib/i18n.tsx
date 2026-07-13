@@ -66,6 +66,9 @@ const translations = {
     score: "Score",
     progress: "Progression",
     home: "Accueil",
+    choose_answer: "Choisis la réponse",
+    module: "Module",
+    all: "Tout",
   },
   en: {
     app_name: "N5 Sensei",
@@ -128,6 +131,9 @@ const translations = {
     score: "Score",
     progress: "Progress",
     home: "Home",
+    choose_answer: "Choose the answer",
+    module: "Module",
+    all: "All",
   },
 } as const;
 

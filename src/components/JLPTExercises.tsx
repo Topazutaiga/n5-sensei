@@ -4,15 +4,17 @@ import { useState, useMemo, useEffect } from "react";
 import { getAllExercises, type JLPTQuestion } from "@/data/jlpt-exercises";
 import { useI18n } from "@/lib/i18n";
 
-type ExerciseType = "all" | "vocab_reading" | "kanji_reading" | "sentence_completion" | "grammar_choice" | "reading_comp";
+type ExerciseType = "all" | "vocab_reading" | "kanji_reading" | "sentence_completion" | "grammar_choice" | "reading_comp" | "lecture" | "phrase";
 
-const TYPE_LABELS: Record<ExerciseType, { fr: string; en: string; emoji: string }> = {
+const TYPE_LABELS: Record<string, { fr: string; en: string; emoji: string }> = {
   all: { fr: "Tout", en: "All", emoji: "🎯" },
   vocab_reading: { fr: "Vocabulaire", en: "Vocabulary", emoji: "📖" },
   kanji_reading: { fr: "Kanji", en: "Kanji", emoji: "漢字" },
   sentence_completion: { fr: "Phrase", en: "Sentence", emoji: "📝" },
   grammar_choice: { fr: "Grammaire", en: "Grammar", emoji: "🔤" },
   reading_comp: { fr: "Lecture", en: "Reading", emoji: "📚" },
+  lecture: { fr: "Lecture", en: "Reading", emoji: "📖" },
+  phrase: { fr: "Phrase", en: "Sentence", emoji: "📝" },
 };
 
 function shuffle<T>(arr: T[]): T[] {
@@ -24,10 +26,10 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-export default function JLPTExercises() {
+export default function JLPTExercises({ defaultType = "all" }: { defaultType?: ExerciseType }) {
   const { t, lang } = useI18n();
   const [mounted, setMounted] = useState(false);
-  const [type, setType] = useState<ExerciseType>("all");
+  const [type, setType] = useState<ExerciseType>(defaultType);
   const [questions, setQuestions] = useState<JLPTQuestion[]>([]);
   const [qIdx, setQIdx] = useState(0);
   const [correct, setCorrect] = useState(0);
@@ -40,6 +42,8 @@ export default function JLPTExercises() {
 
   const filteredExercises = useMemo(() => {
     if (!mounted) return [];
+    if (type === "lecture") return shuffle(allExercises.filter((e) => e.type === "vocab_reading" || e.type === "kanji_reading"));
+    if (type === "phrase") return shuffle(allExercises.filter((e) => e.type === "sentence_completion" || e.type === "grammar_choice" || e.type === "reading_comp"));
     if (type === "all") return shuffle([...allExercises]);
     return shuffle(allExercises.filter((e) => e.type === type));
   }, [type, allExercises, mounted]);
