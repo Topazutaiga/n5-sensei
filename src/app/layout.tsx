@@ -13,8 +13,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "N5 Sensei - Apprends le japonais",
-  description: "Apprends le japonais niveau JLPT N5 avec des flashcards, quiz et exercices d'écoute.",
+  title: "N5 Sensei - Apprends le japonais JLPT N5",
+  description:
+    "Apprends le japonais niveau JLPT N5 avec des flashcards SRS, quiz, exercices d'écoute et exercices type examen. Vocabulaire, kanji et grammaire pour réussir le JLPT N5.",
+  keywords: ["japonais", "JLPT", "N5", "apprendre japonais", "flashcards", "kanji", "vocabulaire japonais"],
+  openGraph: {
+    title: "N5 Sensei - Apprends le japonais JLPT N5",
+    description: "Flashcards, quiz et exercices pour réussir le JLPT N5.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

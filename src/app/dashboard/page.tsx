@@ -3,21 +3,34 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
+import { VOCAB, KANJI, GRAMMAR } from "@/data";
+
+const TOTAL_CARDS = VOCAB.length + KANJI.length + GRAMMAR.length;
 
 export default function DashboardPage() {
   const { t } = useI18n();
-  const [stats, setStats] = useState({ reviewed: 0, mastered: 0, total: 0 });
+  const [stats, setStats] = useState({ reviewed: 0, mastered: 0, total: TOTAL_CARDS, streak: 0 });
 
   useEffect(() => {
     const raw = localStorage.getItem("n5sensei_cards");
     if (raw) {
       const cards = JSON.parse(raw);
-      const entries = Object.values(cards) as { level: number; reviewed: number }[];
-      setStats({
-        reviewed: entries.reduce((s, c) => s + (c.reviewed || 0), 0),
+      const entries = Object.values(cards) as { level: number; reviewed: number; nextReview?: string }[];
+      setStats((s) => ({
+        ...s,
+        reviewed: entries.reduce((sum, c) => sum + (c.reviewed || 0), 0),
         mastered: entries.filter((c) => c.level >= 3).length,
-        total: 300,
-      });
+      }));
+    }
+
+    const streakRaw = localStorage.getItem("n5sensei_streak");
+    if (streakRaw) {
+      const streakData = JSON.parse(streakRaw) as { lastDate: string; count: number };
+      const today = new Date().toISOString().slice(0, 10);
+      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      if (streakData.lastDate === today || streakData.lastDate === yesterday) {
+        setStats((s) => ({ ...s, streak: streakData.count }));
+      }
     }
   }, []);
 
@@ -36,7 +49,7 @@ export default function DashboardPage() {
           <div className="text-xs text-gray-400 mt-1">{t("mastered")}</div>
         </div>
         <div className="bg-white dark:bg-[#252220] rounded-2xl p-4 text-center shadow-sm border border-gray-100 dark:border-gray-800">
-          <div className="text-2xl font-bold">🔥</div>
+          <div className="text-2xl font-bold">🔥 {stats.streak}</div>
           <div className="text-xs text-gray-400 mt-1">{t("streak")}</div>
         </div>
       </div>

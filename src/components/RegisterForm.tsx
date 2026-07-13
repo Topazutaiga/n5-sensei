@@ -20,7 +20,7 @@ export default function RegisterForm() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard` },
+      options: { emailRedirectTo: `${window.location.origin}/dashboard` },
     });
 
     if (error) {

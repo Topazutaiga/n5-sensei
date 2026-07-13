@@ -17,27 +17,71 @@ export default function Home() {
           </p>
         </div>
 
+        {/* Stats */}
+        <div className="flex justify-center gap-8 mb-12">
+          <div className="text-center">
+            <div className="text-2xl font-bold bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent">800+</div>
+            <div className="text-xs text-gray-400">Vocabulaire</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent">100+</div>
+            <div className="text-xs text-gray-400">Kanji</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent">80+</div>
+            <div className="text-xs text-gray-400">Points de grammaire</div>
+          </div>
+        </div>
+
         {/* Features */}
         <div className="grid grid-cols-2 gap-4 mb-12">
           <div className="bg-white dark:bg-[#252220] rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800 text-left">
             <div className="text-3xl mb-3">⚡</div>
-            <h3 className="font-semibold mb-1">Flashcards</h3>
-            <p className="text-sm text-gray-400">Vocabulaire, kanji et grammaire</p>
+            <h3 className="font-semibold mb-1">Flashcards SRS</h3>
+            <p className="text-sm text-gray-400">Répétition espacée pour mémoriser durablement</p>
           </div>
           <div className="bg-white dark:bg-[#252220] rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800 text-left">
             <div className="text-3xl mb-3">📝</div>
             <h3 className="font-semibold mb-1">Quiz</h3>
-            <p className="text-sm text-gray-400">Teste tes connaissances</p>
+            <p className="text-sm text-gray-400">Teste tes connaissances en vocabulaire et grammaire</p>
           </div>
           <div className="bg-white dark:bg-[#252220] rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800 text-left">
             <div className="text-3xl mb-3">🔊</div>
             <h3 className="font-semibold mb-1">Écoute</h3>
-            <p className="text-sm text-gray-400">Phrases et dialogues N5</p>
+            <p className="text-sm text-gray-400">Phrases et dialogues avec synthèse vocale</p>
           </div>
           <div className="bg-white dark:bg-[#252220] rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-800 text-left">
             <div className="text-3xl mb-3">🎯</div>
-            <h3 className="font-semibold mb-1">Exercices</h3>
-            <p className="text-sm text-gray-400">Type examen JLPT N5</p>
+            <h3 className="font-semibold mb-1">Exercices JLPT</h3>
+            <p className="text-sm text-gray-400">Entraîne-toi comme le jour de l&apos;examen</p>
+          </div>
+        </div>
+
+        {/* How it works */}
+        <div className="bg-white dark:bg-[#252220] rounded-2xl p-8 shadow-sm border border-gray-100 dark:border-gray-800 mb-12 text-left">
+          <h2 className="text-lg font-bold mb-4 text-center">Comment ça marche ?</h2>
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-orange-400 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">1</div>
+              <div>
+                <div className="font-semibold text-sm">Choisis ta catégorie</div>
+                <div className="text-xs text-gray-400">Vocabulaire, kanji ou grammaire</div>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-orange-400 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">2</div>
+              <div>
+                <div className="font-semibold text-sm">Évalue ta maîtrise</div>
+                <div className="text-xs text-gray-400">Dur, OK ou facile — le système adapte les révisions</div>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-red-500 to-orange-400 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">3</div>
+              <div>
+                <div className="font-semibold text-sm">Progresse chaque jour</div>
+                <div className="text-xs text-gray-400">Suis ta progression et garde ta série d&apos;étude</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -56,6 +100,11 @@ export default function Home() {
             J&apos;ai déjà un compte
           </Link>
         </div>
+
+        {/* Footer */}
+        <p className="text-xs text-gray-300 mt-12">
+          Prépare-toi au JLPT N5 avec N5 Sensei
+        </p>
       </div>
     </div>
   );

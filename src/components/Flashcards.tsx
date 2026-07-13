@@ -70,6 +70,22 @@ export default function Flashcards() {
       ...c,
       [key]: { level: newLevel, nextReview: next.toISOString().slice(0, 10), reviewed: prev.reviewed + 1 },
     }));
+
+    const today = new Date().toISOString().slice(0, 10);
+    const streakRaw = localStorage.getItem("n5sensei_streak");
+    if (streakRaw) {
+      const streakData = JSON.parse(streakRaw) as { lastDate: string; count: number };
+      if (streakData.lastDate === today) {
+        // Already studied today, no change
+      } else {
+        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+        const newCount = streakData.lastDate === yesterday ? streakData.count + 1 : 1;
+        localStorage.setItem("n5sensei_streak", JSON.stringify({ lastDate: today, count: newCount }));
+      }
+    } else {
+      localStorage.setItem("n5sensei_streak", JSON.stringify({ lastDate: today, count: 1 }));
+    }
+
     setIdx((i) => i + 1);
     setFlipped(false);
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { VOCAB, KANJI, GRAMMAR } from "@/data";
 import { useI18n } from "@/lib/i18n";
 
@@ -80,7 +80,7 @@ export default function Quiz() {
 
   if (questions.length === 0) return null;
   const q = questions[qIdx];
-  const opts = shuffleArr([...q.mean, ...q.wrongs]);
+  const opts = useMemo(() => shuffleArr([q.mean, ...q.wrongs]), [q]);
 
   return (
     <div>
