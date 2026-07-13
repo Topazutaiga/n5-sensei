@@ -45,7 +45,7 @@ function DashboardNav({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-[#1a1816] dark:via-[#1e1b18] dark:to-[#1a1816]">
+    <div className="min-h-screen">
       <header className="sticky top-0 z-50 backdrop-blur-lg bg-white/80 dark:bg-[#1a1816]/80 border-b border-gray-100 dark:border-gray-800">
         <div className="flex items-center justify-between px-4 py-3 max-w-lg mx-auto">
           <Link href="/dashboard" className="text-xl font-bold">

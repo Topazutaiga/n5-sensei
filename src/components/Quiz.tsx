@@ -8,10 +8,8 @@ type QuizMode = "vocab" | "kanji" | "grammar" | "mixed";
 const ALL_DATA = { vocab: VOCAB, kanji: KANJI, grammar: GRAMMAR };
 
 interface QuizQuestion {
-  mode: string;
   jp: string;
-  read: string;
-  mean: string;
+  correct: string;
   wrongs: string[];
 }
 
@@ -24,6 +22,8 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+const MAX_Q = 350;
+
 export default function Quiz() {
   const { t, lang } = useI18n();
   const [mounted, setMounted] = useState(false);
@@ -35,21 +35,20 @@ export default function Quiz() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
 
   const initQuiz = useCallback(() => {
-    const modes = mode === "mixed" ? (["vocab", "kanji", "grammar"] as const) : [mode];
-    const pool: { mode: string; jp: string; read: string; mean: string; idx: number }[] = [];
+    const modes: readonly (keyof typeof ALL_DATA)[] = mode === "mixed" ? (["vocab", "kanji", "grammar"] as const) : [mode];
+    const pool: { jp: string; read: string }[] = [];
+    const perMode = Math.ceil(MAX_Q / modes.length);
     modes.forEach((m) => {
       const d = ALL_DATA[m];
       if (!d || d.length === 0) return;
-      const indices = shuffle(d.map((_, i) => i)).slice(0, 10);
-      indices.forEach((i) => pool.push({ mode: m, ...d[i], idx: i }));
+      const slice = shuffle(d.map((x) => ({ jp: x.jp, read: x.read })));
+      slice.slice(0, perMode).forEach((x) => pool.push(x));
     });
     const qs: QuizQuestion[] = shuffle(pool).map((item) => {
-      const d = ALL_DATA[item.mode as keyof typeof ALL_DATA];
-      if (!d) return { mode: item.mode, jp: item.jp, read: item.read, mean: item.mean, wrongs: ["?", "??", "???"] };
-      const wrongPool = d.filter((x, i) => i !== item.idx && x.mean !== item.mean).map((x) => x.mean);
-      const wrongs = shuffle(wrongPool).slice(0, 3);
-      while (wrongs.length < 3) wrongs.push("?");
-      return { mode: item.mode, jp: item.jp, read: item.read, mean: item.mean, wrongs };
+      const allReads = ALL_DATA["vocab"].concat(ALL_DATA["kanji"]).concat(ALL_DATA["grammar"]).map((x) => x.read);
+      const wrongPool = shuffle(allReads.filter((r) => r !== item.read));
+      const wrongs = wrongPool.slice(0, 3);
+      return { jp: item.jp, correct: item.read, wrongs };
     });
     setQuestions(qs);
     setQIdx(0);
@@ -65,14 +64,14 @@ export default function Quiz() {
   const opts = useMemo(() => {
     const q = questions[qIdx];
     if (!q) return [];
-    return shuffle([q.mean, ...q.wrongs]);
+    return shuffle([q.correct, ...q.wrongs]);
   }, [qIdx, questions]);
 
   function answer(chosen: string) {
     if (answered || !currQ) return;
     setAnswered(true);
     setSelectedAnswer(chosen);
-    if (chosen === currQ.mean) setCorrect((c) => c + 1);
+    if (chosen === currQ.correct) setCorrect((c) => c + 1);
     setTimeout(() => {
       setQIdx((i) => i + 1);
       setAnswered(false);
@@ -125,15 +124,14 @@ export default function Quiz() {
 
       <div className="bg-white dark:bg-[#252220] rounded-2xl p-8 shadow-lg text-center mb-6 border border-gray-100 dark:border-gray-800">
         <div className="text-5xl font-bold mb-2">{currQ.jp}</div>
-        {currQ.mode !== "kanji" && <div className="text-lg text-gray-500">{currQ.read}</div>}
-        <p className="text-sm text-gray-400 mt-4">{lang === "en" ? "What does it mean?" : t("which_meaning")}</p>
+        <p className="text-sm text-gray-400 mt-4">{lang === "en" ? "Choose the reading:" : "Choisis la lecture :"}</p>
       </div>
 
       <div className="flex flex-col gap-3">
         {opts.map((o, i) => {
           let cls = "border-2 border-gray-200 dark:border-gray-700 hover:border-red-300 bg-white dark:bg-[#252220]";
-          if (answered && o === currQ.mean) cls = "border-2 border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700";
-          if (answered && o === selectedAnswer && o !== currQ.mean) cls = "border-2 border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700";
+          if (answered && o === currQ.correct) cls = "border-2 border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700";
+          if (answered && o === selectedAnswer && o !== currQ.correct) cls = "border-2 border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700";
           return (
             <button key={`${qIdx}-${i}`} onClick={() => answer(o)} disabled={answered}
               className={`py-3.5 px-5 rounded-xl text-center font-medium transition-all ${cls}`}>{o}</button>
