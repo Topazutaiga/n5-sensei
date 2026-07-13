@@ -40,17 +40,18 @@ export default function Quiz() {
     const modes = mode === "mixed" ? (["vocab", "kanji", "grammar"] as const) : [mode];
     const pool: { mode: string; jp: string; read: string; mean: string; idx: number }[] = [];
     modes.forEach((m) => {
-      const data = ALL_DATA[m];
-      if (!data) return;
-      const indices = shuffle(data.map((_, i) => i)).slice(0, 10);
-      indices.forEach((i) => pool.push({ mode: m, ...data[i], idx: i }));
+      const d = ALL_DATA[m];
+      if (!d || d.length === 0) return;
+      const indices = shuffle(d.map((_, i) => i)).slice(0, 10);
+      indices.forEach((i) => pool.push({ mode: m, ...d[i], idx: i }));
     });
     const qs: QuizQuestion[] = shuffle(pool).map((item) => {
-      const data = ALL_DATA[item.mode as keyof typeof ALL_DATA];
-      if (!data) return { mode: item.mode, jp: item.jp, read: item.read, mean: item.mean, wrongs: ["?", "?", "?"] };
-      const correctMean = item.mean;
-      const pool2 = data.filter((d, i) => i !== item.idx && d.mean !== correctMean).map((d) => d.mean);
-      return { mode: item.mode, jp: item.jp, read: item.read, mean: item.mean, wrongs: shuffle(pool2).slice(0, 3) };
+      const d = ALL_DATA[item.mode as keyof typeof ALL_DATA];
+      if (!d) return { mode: item.mode, jp: item.jp, read: item.read, mean: item.mean, wrongs: ["?", "??", "???"] };
+      const wrongPool = d.filter((x, i) => i !== item.idx && x.mean !== item.mean).map((x) => x.mean);
+      const wrongs = shuffle(wrongPool).slice(0, 3);
+      while (wrongs.length < 3) wrongs.push("?");
+      return { mode: item.mode, jp: item.jp, read: item.read, mean: item.mean, wrongs };
     });
     setQuestions(qs);
     setQIdx(0);
@@ -62,7 +63,7 @@ export default function Quiz() {
   useEffect(() => { if (mounted) initQuiz(); }, [initQuiz, mounted]);
 
   function answer(chosen: string) {
-    if (answered || qIdx >= questions.length) return;
+    if (answered || questions.length === 0 || qIdx >= questions.length) return;
     setAnswered(true);
     setSelectedAnswer(chosen);
     if (chosen === questions[qIdx].mean) setCorrect((c) => c + 1);
@@ -92,6 +93,7 @@ export default function Quiz() {
   }
 
   if (questions.length === 0) return null;
+  if (qIdx >= questions.length) return null;
   const q = questions[qIdx];
   if (!q) return null;
   const opts = useMemo(() => shuffle([q.mean, ...q.wrongs]), [qIdx]);
@@ -100,16 +102,12 @@ export default function Quiz() {
     <div>
       <div className="flex gap-2 mb-6 flex-wrap">
         {(["vocab", "kanji", "grammar", "mixed"] as QuizMode[]).map((m) => (
-          <button
-            key={m}
-            onClick={() => setMode(m)}
+          <button key={m} onClick={() => setMode(m)}
             className={`px-4 py-2.5 rounded-full text-sm font-semibold transition-all ${
-              mode === m
-                ? "bg-gradient-to-r from-red-500 to-orange-400 text-white shadow-md"
-                : "border-2 border-gray-200 dark:border-gray-700 text-gray-500 hover:border-red-300"
+              mode === m ? "bg-gradient-to-r from-red-500 to-orange-400 text-white shadow-md" : "border-2 border-gray-200 dark:border-gray-700 text-gray-500 hover:border-red-300"
             }`}
           >
-            {m === "mixed" ? "🎯 Mixte" : m === "vocab" ? "📖 Vocab" : m === "kanji" ? "漢字 Kanji" : "🔤 Gram"}
+            {m === "mixed" ? "🎯 " + (lang === "en" ? "Mixed" : "Mixte") : m === "vocab" ? "📖 " + (lang === "en" ? "Vocab" : "Vocab") : m === "kanji" ? "漢字 Kanji" : "🔤 " + (lang === "en" ? "Gram" : "Gram")}
           </button>
         ))}
       </div>
@@ -124,24 +122,17 @@ export default function Quiz() {
       <div className="bg-white dark:bg-[#252220] rounded-2xl p-8 shadow-lg text-center mb-6 border border-gray-100 dark:border-gray-800">
         <div className="text-5xl font-bold mb-2">{q.jp}</div>
         {q.mode !== "kanji" && <div className="text-lg text-gray-500">{q.read}</div>}
-        <p className="text-sm text-gray-400 mt-4">{t("which_meaning")}</p>
+        <p className="text-sm text-gray-400 mt-4">{lang === "en" ? "What does it mean?" : t("which_meaning")}</p>
       </div>
 
       <div className="flex flex-col gap-3">
-        {opts.map((o) => {
+        {opts.map((o, i) => {
           let cls = "border-2 border-gray-200 dark:border-gray-700 hover:border-red-300 bg-white dark:bg-[#252220]";
           if (answered && o === q.mean) cls = "border-2 border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700";
           if (answered && o === selectedAnswer && o !== q.mean) cls = "border-2 border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700";
-
           return (
-            <button
-              key={`${qIdx}-${o}`}
-              onClick={() => answer(o)}
-              disabled={answered}
-              className={`py-3.5 px-5 rounded-xl text-center font-medium transition-all ${cls}`}
-            >
-              {o}
-            </button>
+            <button key={`${qIdx}-${i}`} onClick={() => answer(o)} disabled={answered}
+              className={`py-3.5 px-5 rounded-xl text-center font-medium transition-all ${cls}`}>{o}</button>
           );
         })}
       </div>

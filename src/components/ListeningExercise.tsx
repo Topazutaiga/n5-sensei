@@ -1,29 +1,20 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { LISTENING } from "@/data";
+import { LISTENING, type JLTPListeningItem } from "@/data";
 import { useI18n } from "@/lib/i18n";
 
 type AudioMode = "phrase" | "dialogue";
-
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
 
 export default function ListeningExercise() {
   const { t, lang } = useI18n();
   const [mounted, setMounted] = useState(false);
   const [mode, setMode] = useState<AudioMode>("phrase");
-  const [questions, setQuestions] = useState<number[]>([]);
+  const [items, setItems] = useState<JLTPListeningItem[]>([]);
   const [qIdx, setQIdx] = useState(0);
   const [correct, setCorrect] = useState(0);
   const [answered, setAnswered] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
   const [rate, setRate] = useState(0.8);
   const synthRef = useRef<SpeechSynthesis | null>(null);
@@ -42,32 +33,24 @@ export default function ListeningExercise() {
     }
   }, []);
 
+  function shuffle<T>(arr: T[]): T[] {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
   const data = useMemo(() => LISTENING[mode === "phrase" ? "phrases" : "dialogues"], [mode]);
 
   const currentItem = useMemo(() => {
-    if (questions.length === 0 || qIdx >= questions.length) return null;
-    return data[questions[qIdx]];
-  }, [questions, qIdx, data]);
-
-  const correctAnswer = useMemo((): string => {
-    if (!currentItem) return "";
-    return currentItem.mean;
-  }, [currentItem]);
-
-  const options = useMemo((): string[] => {
-    if (!currentItem) return [];
-    const wrongs = new Set<string>();
-    const allAnswers = data.map((item) => item.mean);
-    while (wrongs.size < 3) {
-      const val = allAnswers[Math.floor(Math.random() * allAnswers.length)];
-      if (val !== correctAnswer && !wrongs.has(val)) wrongs.add(val);
-    }
-    return shuffle([...wrongs, correctAnswer]);
-  }, [currentItem, correctAnswer, data]);
+    if (qIdx >= items.length) return null;
+    return items[qIdx];
+  }, [items, qIdx]);
 
   const init = useCallback(() => {
-    const indices = shuffle(data.map((_, i) => i));
-    setQuestions(indices.slice(0, 10));
+    setItems(shuffle(data).slice(0, 10));
     setQIdx(0);
     setCorrect(0);
     setAnswered(false);
@@ -82,12 +65,8 @@ export default function ListeningExercise() {
     if (!synth || !currentItem) return;
     synth.cancel();
 
-    const text = mode === "dialogue"
-      ? currentItem.jp.replace(/^[AB]:\s*/gm, "").replace(/\n/g, " ")
-      : currentItem.jp;
-
     setPlaying(true);
-    const u = new SpeechSynthesisUtterance(text);
+    const u = new SpeechSynthesisUtterance(currentItem.audio.replace(/^[AB]:\s*/gm, "").replace(/\n/g, " "));
     u.lang = "ja-JP";
     u.rate = rate;
     const voices = synth.getVoices();
@@ -98,11 +77,11 @@ export default function ListeningExercise() {
     synth.speak(u);
   }
 
-  function answer(chosen: string) {
-    if (answered) return;
+  function answer(idx: number) {
+    if (answered || !currentItem) return;
     setAnswered(true);
-    setSelectedAnswer(chosen);
-    if (chosen === correctAnswer) setCorrect((c) => c + 1);
+    setSelectedAnswer(idx);
+    if (idx === currentItem.answerIndex) setCorrect((c) => c + 1);
     setTimeout(() => {
       setQIdx((i) => i + 1);
       setAnswered(false);
@@ -112,16 +91,16 @@ export default function ListeningExercise() {
 
   if (!mounted) return null;
 
-  if (qIdx >= questions.length && questions.length > 0) {
-    const pct = Math.round((correct / questions.length) * 100);
+  if (qIdx >= items.length && items.length > 0) {
+    const pct = Math.round((correct / items.length) * 100);
     return (
       <div className="text-center py-16">
         <div className="inline-flex items-center justify-center w-28 h-28 rounded-full bg-gradient-to-br from-red-500 to-orange-400 mb-6 shadow-lg">
           <span className="text-4xl font-bold text-white">{pct}%</span>
         </div>
-        <div className="text-2xl font-bold mb-1">{correct} / {questions.length}</div>
+        <div className="text-2xl font-bold mb-1">{correct} / {items.length}</div>
         <p className="text-gray-500 mb-6">{t("correct_answers")}</p>
-        <button onClick={init} className="px-8 py-3 bg-gradient-to-r from-red-500 to-orange-400 text-white rounded-xl font-semibold hover:shadow-lg transition-all">
+        <button onClick={init} className="px-8 py-3 bg-gradient-to-r from-red-500 to-orange-400 text-white rounded-xl font-bold hover:shadow-lg transition-all">
           {t("restart")}
         </button>
       </div>
@@ -132,6 +111,7 @@ export default function ListeningExercise() {
 
   return (
     <div>
+      {/* Mode selector */}
       <div className="flex gap-2 mb-6">
         {(["phrase", "dialogue"] as AudioMode[]).map((m) => (
           <button
@@ -143,14 +123,24 @@ export default function ListeningExercise() {
                 : "border-2 border-gray-200 dark:border-gray-700 text-gray-500 hover:border-red-300"
             }`}
           >
-            {m === "phrase" ? "📝 Phrases" : "💬 Dialogues"}
+            {m === "phrase" ? "📝 " + (lang === "en" ? "Phrases" : "Phrases") : "💬 " + (lang === "en" ? "Dialogues" : "Dialogues")}
           </button>
         ))}
       </div>
 
+      {/* Scene emoji (dialogue mode) */}
+      {currentItem.scene && (
+        <div className="text-center mb-4">
+          <div className="inline-block bg-white/80 dark:bg-[#252220]/80 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-800">
+            <span className="text-5xl">{currentItem.scene}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Audio player card */}
       <div className="bg-white dark:bg-[#252220] rounded-2xl p-8 shadow-lg text-center mb-6 border border-gray-100 dark:border-gray-800">
         <span className="inline-block px-4 py-1.5 rounded-full bg-gradient-to-r from-red-500 to-orange-400 text-white text-xs font-bold mb-4 uppercase tracking-wide">
-          {mode === "dialogue" ? "Dialogue N5" : "Phrase N5"}
+          {mode === "dialogue" ? (lang === "en" ? "Dialogue" : "Dialogue N5") : (lang === "en" ? "Phrase" : "Phrase N5")}
         </span>
 
         <div className="min-h-[60px] flex items-center justify-center mb-4">
@@ -166,12 +156,16 @@ export default function ListeningExercise() {
               <span className="text-sm font-medium">{t("listening_status")}</span>
             </div>
           ) : (
-            <span className="text-gray-400">{t("press_listen")}</span>
+            <>
+              <div className="text-2xl mb-2">🎧</div>
+              <p className="text-gray-400">{t("press_listen")}</p>
+            </>
           )}
         </div>
 
-        <p className="text-sm text-gray-500 mb-5">{currentItem.q}</p>
+        <p className="text-sm text-gray-500 mb-5">{currentItem.question}</p>
 
+        {/* Speed controls */}
         <div className="flex gap-2 justify-center mb-4">
           {[
             { v: 0.6, l: "🐢 " + t("slow") },
@@ -201,45 +195,55 @@ export default function ListeningExercise() {
         </button>
 
         {!voicesLoaded && mounted && (
-          <p className="text-xs text-orange-400 mt-2">{lang === "en" ? "Loading Japanese voices..." : "Chargement des voix japonaises..."}</p>
+          <p className="text-xs text-orange-400 mt-2">
+            {lang === "en" ? "Loading Japanese voices..." : "Chargement des voix japonaises..."}
+          </p>
         )}
 
         {answered && (
           <div className="mt-5 pt-5 border-t border-gray-100 dark:border-gray-800 space-y-1">
-            <div className="text-lg font-bold text-green-600">{currentItem.jp}</div>
-            <div className="text-sm text-gray-500">{correctAnswer}</div>
-            {mode === "dialogue" && "note" in currentItem && (
-              <div className="text-xs text-gray-400 mt-1">{(currentItem as { note: string }).note}</div>
+            <p className="text-sm text-gray-400 mb-1">{lang === "en" ? "Correct answer:" : "Bonne réponse :"}</p>
+            <div className="text-lg font-bold text-green-600">
+              {currentItem.options[currentItem.answerIndex].emoji} {currentItem.options[currentItem.answerIndex].text}
+            </div>
+            {currentItem.note && (
+              <div className="text-xs text-gray-400 mt-1">{currentItem.note}</div>
             )}
           </div>
         )}
       </div>
 
-      <div className="flex flex-col gap-3">
-        {options.map((o) => {
+      {/* Answer choices (JLPT format: large emoji + text cards) */}
+      <div className="text-xs text-gray-400 text-center mb-3 font-medium uppercase tracking-wide">
+        {mode === "phrase" ? (lang === "en" ? "Choose the best response (もんだい4)" : "Choisis la meilleure réponse (もんだい4)") : (lang === "en" ? "Choose the answer (もんだい1/3)" : "Choisis la réponse (もんだい1/3)")}
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        {currentItem.options.map((opt, i) => {
           let cls = "border-2 border-gray-200 dark:border-gray-700 hover:border-red-300 bg-white dark:bg-[#252220]";
-          if (answered && o === correctAnswer) cls = "border-2 border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700";
-          if (answered && o === selectedAnswer && o !== correctAnswer) cls = "border-2 border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700";
+          if (answered && i === currentItem.answerIndex) cls = "border-2 border-green-500 bg-green-50 dark:bg-green-900/20";
+          if (answered && i === selectedAnswer && i !== currentItem.answerIndex) cls = "border-2 border-red-500 bg-red-50 dark:bg-red-900/20";
 
           return (
             <button
-              key={o}
-              onClick={() => answer(o)}
+              key={`${qIdx}-${i}`}
+              onClick={() => answer(i)}
               disabled={answered}
-              className={`py-3.5 px-5 rounded-xl text-center font-medium transition-all ${cls}`}
+              className={`flex flex-col items-center justify-center gap-2 py-5 px-4 rounded-xl text-center font-medium transition-all ${cls}`}
             >
-              {o}
+              <span className="text-4xl">{opt.emoji}</span>
+              <span className="text-sm">{opt.text}</span>
             </button>
           );
         })}
       </div>
 
+      {/* Progress */}
       <div className="text-center mt-4">
         <div className="inline-flex items-center gap-2 text-sm text-gray-400">
           <div className="h-1.5 w-24 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-red-500 to-orange-400 rounded-full" style={{ width: `${((qIdx + 1) / questions.length) * 100}%` }} />
+            <div className="h-full bg-gradient-to-r from-red-500 to-orange-400 rounded-full" style={{ width: `${((qIdx + 1) / items.length) * 100}%` }} />
           </div>
-          {qIdx + 1} / {questions.length}
+          {qIdx + 1} / {items.length}
         </div>
       </div>
     </div>
