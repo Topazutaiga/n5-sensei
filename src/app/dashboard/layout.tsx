@@ -9,9 +9,7 @@ import { I18nProvider, useI18n } from "@/lib/i18n";
 const NAV_ITEMS = [
   { href: "/dashboard", labelKey: "dashboard" as const, icon: "📊" },
   { href: "/dashboard/learn", labelKey: "learn" as const, icon: "⚡" },
-  { href: "/dashboard/quiz", labelKey: "quiz" as const, icon: "📝" },
-  { href: "/dashboard/listening", labelKey: "listening" as const, icon: "🔊" },
-  { href: "/dashboard/exercises", labelKey: "exercises" as const, icon: "🎯" },
+  { href: "/dashboard/exercises", labelKey: "exercises" as const, icon: "📝" },
 ];
 
 function DashboardNav({ children }: { children: React.ReactNode }) {

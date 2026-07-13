@@ -1,7 +1,7 @@
-import JLPTExercises from "@/components/JLPTExercises";
+import ExercicesTabs from "@/components/ExercicesTabs";
 
-export const metadata = { title: "Exercices JLPT N5 - N5 Sensei" };
+export const metadata = { title: "Exercices - N5 Sensei" };
 
 export default function ExercisesPage() {
-  return <JLPTExercises />;
+  return <ExercicesTabs />;
 }

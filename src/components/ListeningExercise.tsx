@@ -202,6 +202,9 @@ export default function ListeningExercise() {
 
         {answered && (
           <div className="mt-5 pt-5 border-t border-gray-100 dark:border-gray-800 space-y-1">
+            <div className={`text-base font-bold ${selectedAnswer === currentItem.answerIndex ? "text-green-600" : "text-red-600"}`}>
+              {selectedAnswer === currentItem.answerIndex ? "✓ 正解 !" : "✗ 不正解"}
+            </div>
             <p className="text-sm text-gray-400 mb-1">{lang === "en" ? "Correct answer:" : "Bonne réponse :"}</p>
             <div className="text-lg font-bold text-green-600">
               {currentItem.options[currentItem.answerIndex].emoji} {currentItem.options[currentItem.answerIndex].text}

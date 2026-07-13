@@ -25,7 +25,7 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 export default function JLPTExercises() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [mounted, setMounted] = useState(false);
   const [type, setType] = useState<ExerciseType>("all");
   const [questions, setQuestions] = useState<JLPTQuestion[]>([]);
@@ -154,6 +154,19 @@ export default function JLPTExercises() {
           );
         })}
       </div>
+
+      {answered && (
+        <div className="mt-4 text-center">
+          <div className={`text-lg font-bold ${selectedAnswer === q.answer ? "text-green-600" : "text-red-600"}`}>
+            {selectedAnswer === q.answer ? "✓ 正解 !" : "✗ 不正解"}
+          </div>
+          {selectedAnswer !== q.answer && (
+            <div className="text-sm text-gray-500 mt-1">
+              {lang === "en" ? "Correct answer:" : "Bonne réponse :"} {q.answer}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

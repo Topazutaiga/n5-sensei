@@ -71,7 +71,6 @@ export default function Flashcards() {
     if (indices.length === 0) {
       indices = data.map((_, i) => i).filter((i) => matchesFilter(getCardState(mode, i).level, filter));
     }
-    if (indices.length === 0) indices = data.map((_, i) => i);
     setSession(shuffle(indices));
     setIdx(0);
     setFlipped(false);

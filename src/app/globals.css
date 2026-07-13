@@ -1,8 +1,10 @@
 @import "tailwindcss";
 
 :root {
-  --background: #faf5f0;
+  --background: #f5f0ea;
   --foreground: #2c2c2c;
+  --accent: #c7363e;
+  --accent-light: #e05a5e;
 }
 
 @theme inline {
@@ -13,7 +15,7 @@
 }
 
 body {
-  background: linear-gradient(135deg, #faf5f0 0%, #f5ede4 30%, #f0e8dc 100%);
+  background: linear-gradient(180deg, #f5f0ea 0%, #ece4d9 50%, #e8dfd2 100%);
   min-height: 100vh;
   color: var(--foreground);
   font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
@@ -21,12 +23,24 @@ body {
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #1a1817;
+    --background: #1c1a18;
     --foreground: #e8ddd0;
+    --accent: #c7363e;
+    --accent-light: #e05a5e;
   }
   body {
-    background: linear-gradient(135deg, #1a1817 0%, #221f1c 30%, #2a2522 100%);
+    background: linear-gradient(180deg, #1c1a18 0%, #22201d 50%, #1a1816 100%);
   }
+}
+
+/* Washi paper texture overlay */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
 }
 
 @keyframes pulse {

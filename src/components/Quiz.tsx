@@ -138,6 +138,19 @@ export default function Quiz() {
           );
         })}
       </div>
+
+      {answered && (
+        <div className="mt-4 text-center">
+          <div className={`text-lg font-bold ${selectedAnswer === currQ.correct ? "text-green-600" : "text-red-600"}`}>
+            {selectedAnswer === currQ.correct ? "✓ 正解 !" : "✗ 不正解"}
+          </div>
+          {selectedAnswer !== currQ.correct && (
+            <div className="text-sm text-gray-500 mt-1">
+              {lang === "en" ? "Correct answer:" : "Bonne réponse :"} {currQ.correct}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
