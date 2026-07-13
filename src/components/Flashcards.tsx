@@ -88,11 +88,6 @@ export default function Flashcards() {
   };
 
   function getMeaning(c: CardData, m: CardMode): string {
-    if (lang === "en") {
-      if (m === "vocab") return (c as VocabItem).read;
-      if (m === "kanji") return (c as KanjiItem).read;
-      return (c as GrammarItem).read;
-    }
     if (m === "vocab") return (c as VocabItem).mean;
     if (m === "kanji") return (c as KanjiItem).mean;
     return (c as GrammarItem).mean;
@@ -168,7 +163,7 @@ export default function Flashcards() {
                   : "border-2 border-gray-200 dark:border-gray-700 text-gray-500"
               }`}
             >
-              {FILTER_LABELS[f].emoji} {f === "all" ? FILTER_LABELS[f].fr : t(f === "hard" ? "hard" : f === "ok" ? "ok" : "easy")}
+              {FILTER_LABELS[f].emoji} {f === "all" ? (lang === "en" ? FILTER_LABELS[f].en : FILTER_LABELS[f].fr) : t(f === "hard" ? "hard" : f === "ok" ? "ok" : "easy")}
               <span className="ml-1.5 text-xs opacity-70">({getLevelCount(f)})</span>
             </button>
           ))}
@@ -214,7 +209,7 @@ export default function Flashcards() {
               filter === f ? "bg-gradient-to-r from-red-500 to-orange-400 text-white shadow-sm" : "border border-gray-200 dark:border-gray-700 text-gray-500"
             }`}
           >
-            {FILTER_LABELS[f].emoji} {f === "all" ? FILTER_LABELS[f].fr : t(f === "hard" ? "hard" : f === "ok" ? "ok" : "easy")}
+            {FILTER_LABELS[f].emoji} {f === "all" ? (lang === "en" ? FILTER_LABELS[f].en : FILTER_LABELS[f].fr) : t(f === "hard" ? "hard" : f === "ok" ? "ok" : "easy")}
             <span className="ml-1 opacity-70">({getLevelCount(f)})</span>
           </button>
         ))}

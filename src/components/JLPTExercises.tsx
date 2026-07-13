@@ -35,9 +35,7 @@ export default function JLPTExercises({ defaultType = "all", forcedModule }: { d
   const [correct, setCorrect] = useState(0);
   const [answered, setAnswered] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [started, setStarted] = useState(false);
-
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => setMounted(true), []);
 
   const isAuto = defaultType === "lecture" || defaultType === "phrase";
 
@@ -51,20 +49,18 @@ export default function JLPTExercises({ defaultType = "all", forcedModule }: { d
     return shuffle(allExercises.filter((e) => e.type === type));
   }, [type, allExercises, mounted]);
 
+  const sortedPool = useMemo(() => isAuto ? filteredExercises : [], [filteredExercises, isAuto]);
+
   useEffect(() => {
-    if (mounted && isAuto && !started) {
-      const pool = filteredExercises;
-      if (pool.length > 0) {
-        const sliced = forcedModule
-          ? pool.slice((forcedModule - 1) * 10, forcedModule * 10)
-          : pool.slice(0, 10);
-        setQuestions(sliced);
-        setQIdx(0);
-        setCorrect(0);
-        setStarted(true);
-      }
+    if (mounted && isAuto && sortedPool.length > 0) {
+      const sliced = forcedModule
+        ? sortedPool.slice((forcedModule - 1) * 10, forcedModule * 10)
+        : sortedPool.slice(0, 10);
+      setQuestions(sliced);
+      setQIdx(0);
+      setCorrect(0);
     }
-  }, [mounted, started, isAuto, filteredExercises, forcedModule]);
+  }, [mounted, isAuto, sortedPool, forcedModule]);
 
   function start() {
     const pool = type === "all" ? shuffle([...allExercises]) : shuffle(allExercises.filter((e) => e.type === type));
@@ -76,7 +72,6 @@ export default function JLPTExercises({ defaultType = "all", forcedModule }: { d
     setCorrect(0);
     setAnswered(false);
     setSelectedAnswer(null);
-    setStarted(true);
   }
 
   function answer(chosen: string) {
