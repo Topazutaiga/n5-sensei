@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { JLPT_EXERCISES, type JLPTQuestion } from "@/data/jlpt-exercises";
+import { useState, useMemo, useEffect } from "react";
+import { getAllExercises, type JLPTQuestion } from "@/data/jlpt-exercises";
 import { useI18n } from "@/lib/i18n";
 
 type ExerciseType = "all" | "vocab_reading" | "kanji_reading" | "sentence_completion" | "grammar_choice" | "reading_comp";
@@ -26,6 +26,7 @@ function shuffle<T>(arr: T[]): T[] {
 
 export default function JLPTExercises() {
   const { t } = useI18n();
+  const [mounted, setMounted] = useState(false);
   const [type, setType] = useState<ExerciseType>("all");
   const [questions, setQuestions] = useState<JLPTQuestion[]>([]);
   const [qIdx, setQIdx] = useState(0);
@@ -33,13 +34,18 @@ export default function JLPTExercises() {
   const [answered, setAnswered] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
 
+  useEffect(() => { setMounted(true); }, []);
+
+  const allExercises = useMemo(() => mounted ? getAllExercises() : [], [mounted]);
+
   const filteredExercises = useMemo(() => {
-    if (type === "all") return shuffle([...JLPT_EXERCISES]);
-    return shuffle(JLPT_EXERCISES.filter((e) => e.type === type));
-  }, [type]);
+    if (!mounted) return [];
+    if (type === "all") return shuffle([...allExercises]);
+    return shuffle(allExercises.filter((e) => e.type === type));
+  }, [type, allExercises, mounted]);
 
   function start() {
-    const pool = type === "all" ? shuffle([...JLPT_EXERCISES]) : shuffle(JLPT_EXERCISES.filter((e) => e.type === type));
+    const pool = type === "all" ? shuffle([...allExercises]) : shuffle(allExercises.filter((e) => e.type === type));
     setQuestions(pool.slice(0, 10));
     setQIdx(0);
     setCorrect(0);
@@ -48,7 +54,7 @@ export default function JLPTExercises() {
   }
 
   function answer(chosen: string) {
-    if (answered) return;
+    if (answered || qIdx >= questions.length) return;
     setAnswered(true);
     setSelectedAnswer(chosen);
     if (chosen === questions[qIdx].answer) setCorrect((c) => c + 1);
@@ -58,6 +64,8 @@ export default function JLPTExercises() {
       setSelectedAnswer(null);
     }, 1800);
   }
+
+  if (!mounted) return null;
 
   if (questions.length === 0) {
     return (
@@ -105,6 +113,7 @@ export default function JLPTExercises() {
   }
 
   const q = questions[qIdx];
+  if (!q) return null;
   const typeInfo = TYPE_LABELS[q.type];
 
   return (
@@ -139,7 +148,7 @@ export default function JLPTExercises() {
 
           return (
             <button
-              key={o}
+              key={`${qIdx}-${o}`}
               onClick={() => answer(o)}
               disabled={answered}
               className={`py-3.5 px-5 rounded-xl text-center font-medium transition-all ${cls}`}

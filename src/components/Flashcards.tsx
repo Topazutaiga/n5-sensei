@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { VOCAB, KANJI, GRAMMAR, type VocabItem, type KanjiItem, type GrammarItem } from "@/data";
 import { useI18n } from "@/lib/i18n";
 
@@ -16,8 +16,18 @@ const MODE_LABELS: Record<CardMode, { fr: string; en: string; emoji: string }> =
 
 interface CardState { level: number; nextReview: string; reviewed: number; }
 
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 export default function Flashcards() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const [mounted, setMounted] = useState(false);
   const [mode, setMode] = useState<CardMode>("vocab");
   const [session, setSession] = useState<number[]>([]);
   const [idx, setIdx] = useState(0);
@@ -26,29 +36,33 @@ export default function Flashcards() {
 
   useEffect(() => {
     const raw = localStorage.getItem("n5sensei_cards");
-    if (raw) setCards(JSON.parse(raw));
+    if (raw) {
+      try { setCards(JSON.parse(raw)); } catch {}
+    }
+    setMounted(true);
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("n5sensei_cards", JSON.stringify(cards));
-  }, [cards]);
+    if (mounted) localStorage.setItem("n5sensei_cards", JSON.stringify(cards));
+  }, [cards, mounted]);
 
-  function getCardState(i: number): CardState {
-    const key = `${mode}_${i}`;
+  function getCardState(modeStr: string, i: number): CardState {
+    const key = `${modeStr}_${i}`;
     return cards[key] || { level: 0, nextReview: new Date().toISOString().slice(0, 10), reviewed: 0 };
   }
 
   const buildSession = useCallback(() => {
     const data = ALL_DATA[mode];
-    let indices = data.map((_, i) => i).filter((i) => getCardState(i).nextReview <= new Date().toISOString().slice(0, 10));
+    if (!data || data.length === 0) return;
+    const today = new Date().toISOString().slice(0, 10);
+    let indices = data.map((_, i) => i).filter((i) => getCardState(mode, i).nextReview <= today);
     if (indices.length === 0) indices = data.map((_, i) => i);
-    shuffleArr(indices);
-    setSession(indices);
+    setSession(shuffle(indices));
     setIdx(0);
     setFlipped(false);
-  }, [mode, cards]);
+  }, [mode, cards, mounted]);
 
-  useEffect(() => { buildSession(); }, [buildSession]);
+  useEffect(() => { if (mounted) buildSession(); }, [buildSession, mounted]);
 
   function flip() { if (!flipped) setFlipped(true); }
 
@@ -57,12 +71,12 @@ export default function Flashcards() {
     if (idx >= session.length) return;
     const i = session[idx];
     const key = `${mode}_${i}`;
-    const prev = getCardState(i);
+    const prev = getCardState(mode, i);
     let newLevel = prev.level;
     if (level === 0) newLevel = Math.max(0, prev.level - 1);
     else if (level === 1) newLevel = Math.min(3, prev.level + 1);
     else if (level === 2) newLevel = Math.min(5, prev.level + 2);
-    const intervals = [0, 1, 2, 4, 7, 14];
+    const intervals = [0, 0, 0, 1, 2, 10];
     const days = intervals[Math.min(newLevel, intervals.length - 1)];
     const next = new Date();
     next.setDate(next.getDate() + days);
@@ -74,14 +88,14 @@ export default function Flashcards() {
     const today = new Date().toISOString().slice(0, 10);
     const streakRaw = localStorage.getItem("n5sensei_streak");
     if (streakRaw) {
-      const streakData = JSON.parse(streakRaw) as { lastDate: string; count: number };
-      if (streakData.lastDate === today) {
-        // Already studied today, no change
-      } else {
-        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-        const newCount = streakData.lastDate === yesterday ? streakData.count + 1 : 1;
-        localStorage.setItem("n5sensei_streak", JSON.stringify({ lastDate: today, count: newCount }));
-      }
+      try {
+        const streakData = JSON.parse(streakRaw) as { lastDate: string; count: number };
+        if (streakData.lastDate !== today) {
+          const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+          const newCount = streakData.lastDate === yesterday ? streakData.count + 1 : 1;
+          localStorage.setItem("n5sensei_streak", JSON.stringify({ lastDate: today, count: newCount }));
+        }
+      } catch {}
     } else {
       localStorage.setItem("n5sensei_streak", JSON.stringify({ lastDate: today, count: 1 }));
     }
@@ -89,6 +103,11 @@ export default function Flashcards() {
     setIdx((i) => i + 1);
     setFlipped(false);
   }
+
+  if (!mounted) return null;
+
+  const data = ALL_DATA[mode];
+  if (!data || data.length === 0) return null;
 
   if (session.length === 0 || idx >= session.length) {
     return (
@@ -104,8 +123,26 @@ export default function Flashcards() {
     );
   }
 
-  const card = ALL_DATA[mode][session[idx]];
-  const isKanji = mode === "kanji";
+  const cardIdx = session[idx];
+  if (cardIdx === undefined || cardIdx >= data.length) {
+    buildSession();
+    return null;
+  }
+
+  const card = data[cardIdx];
+  if (!card) return null;
+
+  function getMeaning(c: CardData, m: CardMode): string {
+    if (m === "vocab") return (c as VocabItem).mean;
+    if (m === "kanji") return lang === "en" ? (c as KanjiItem).read : (c as KanjiItem).mean;
+    return (c as GrammarItem).mean;
+  }
+
+  function getReading(c: CardData, m: CardMode): string {
+    if (m === "vocab") return (c as VocabItem).read;
+    if (m === "kanji") return (c as KanjiItem).read;
+    return (c as GrammarItem).read;
+  }
 
   return (
     <div>
@@ -113,7 +150,7 @@ export default function Flashcards() {
         {(["vocab", "kanji", "grammar"] as CardMode[]).map((m) => (
           <button
             key={m}
-            onClick={() => setMode(m)}
+            onClick={() => { setMode(m); }}
             className={`flex items-center gap-1.5 px-4 py-2.5 rounded-full text-sm font-semibold transition-all ${
               mode === m
                 ? "bg-gradient-to-r from-red-500 to-orange-400 text-white shadow-md"
@@ -135,11 +172,11 @@ export default function Flashcards() {
         <div className="text-5xl font-bold mb-3">{card.jp}</div>
         {flipped ? (
           <>
-            <div className="text-xl text-gray-500 mb-1">{isKanji && (card as KanjiItem).read}</div>
-            <div className="text-base text-gray-400">{card.mean}</div>
+            <div className="text-xl text-gray-500 mb-1">{getReading(card, mode)}</div>
+            <div className="text-base text-gray-400">{getMeaning(card, mode)}</div>
           </>
         ) : (
-          <p className="text-sm text-gray-400 mt-4">Clique pour retourner</p>
+          <p className="text-sm text-gray-400 mt-4">{lang === "en" ? "Tap to flip" : "Clique pour retourner"}</p>
         )}
       </div>
 
@@ -165,11 +202,4 @@ export default function Flashcards() {
       </div>
     </div>
   );
-}
-
-function shuffleArr(arr: number[]) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
 }

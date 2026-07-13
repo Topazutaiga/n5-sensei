@@ -25,7 +25,8 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 export default function Quiz() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const [mounted, setMounted] = useState(false);
   const [mode, setMode] = useState<QuizMode>("vocab");
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [qIdx, setQIdx] = useState(0);
@@ -33,16 +34,20 @@ export default function Quiz() {
   const [answered, setAnswered] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
 
+  useEffect(() => { setMounted(true); }, []);
+
   const initQuiz = useCallback(() => {
     const modes = mode === "mixed" ? (["vocab", "kanji", "grammar"] as const) : [mode];
     const pool: { mode: string; jp: string; read: string; mean: string; idx: number }[] = [];
     modes.forEach((m) => {
       const data = ALL_DATA[m];
+      if (!data) return;
       const indices = shuffle(data.map((_, i) => i)).slice(0, 10);
       indices.forEach((i) => pool.push({ mode: m, ...data[i], idx: i }));
     });
     const qs: QuizQuestion[] = shuffle(pool).map((item) => {
       const data = ALL_DATA[item.mode as keyof typeof ALL_DATA];
+      if (!data) return { mode: item.mode, jp: item.jp, read: item.read, mean: item.mean, wrongs: ["?", "?", "?"] };
       const correctMean = item.mean;
       const pool2 = data.filter((d, i) => i !== item.idx && d.mean !== correctMean).map((d) => d.mean);
       return { mode: item.mode, jp: item.jp, read: item.read, mean: item.mean, wrongs: shuffle(pool2).slice(0, 3) };
@@ -54,10 +59,10 @@ export default function Quiz() {
     setSelectedAnswer(null);
   }, [mode]);
 
-  useEffect(() => { initQuiz(); }, [initQuiz]);
+  useEffect(() => { if (mounted) initQuiz(); }, [initQuiz, mounted]);
 
   function answer(chosen: string) {
-    if (answered) return;
+    if (answered || qIdx >= questions.length) return;
     setAnswered(true);
     setSelectedAnswer(chosen);
     if (chosen === questions[qIdx].mean) setCorrect((c) => c + 1);
@@ -67,6 +72,8 @@ export default function Quiz() {
       setSelectedAnswer(null);
     }, 1200);
   }
+
+  if (!mounted) return null;
 
   if (qIdx >= questions.length && questions.length > 0) {
     const pct = Math.round((correct / questions.length) * 100);
@@ -86,7 +93,8 @@ export default function Quiz() {
 
   if (questions.length === 0) return null;
   const q = questions[qIdx];
-  const opts = useMemo(() => shuffle([q.mean, ...q.wrongs]), [qIdx, questions]);
+  if (!q) return null;
+  const opts = useMemo(() => shuffle([q.mean, ...q.wrongs]), [qIdx]);
 
   return (
     <div>
@@ -127,7 +135,7 @@ export default function Quiz() {
 
           return (
             <button
-              key={o}
+              key={`${qIdx}-${o}`}
               onClick={() => answer(o)}
               disabled={answered}
               className={`py-3.5 px-5 rounded-xl text-center font-medium transition-all ${cls}`}

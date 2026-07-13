@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { LISTENING } from "@/data";
+import { useI18n } from "@/lib/i18n";
 
 type AudioMode = "phrase" | "dialogue";
 
@@ -15,6 +16,8 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 export default function ListeningExercise() {
+  const { t, lang } = useI18n();
+  const [mounted, setMounted] = useState(false);
   const [mode, setMode] = useState<AudioMode>("phrase");
   const [questions, setQuestions] = useState<number[]>([]);
   const [qIdx, setQIdx] = useState(0);
@@ -24,7 +27,6 @@ export default function ListeningExercise() {
   const [playing, setPlaying] = useState(false);
   const [rate, setRate] = useState(0.8);
   const synthRef = useRef<SpeechSynthesis | null>(null);
-  const [mounted, setMounted] = useState(false);
   const [voicesLoaded, setVoicesLoaded] = useState(false);
 
   useEffect(() => {
@@ -33,9 +35,7 @@ export default function ListeningExercise() {
       synthRef.current = window.speechSynthesis;
       const checkVoices = () => {
         const voices = window.speechSynthesis.getVoices();
-        if (voices.some((v) => v.lang.startsWith("ja"))) {
-          setVoicesLoaded(true);
-        }
+        if (voices.some((v) => v.lang.startsWith("ja"))) setVoicesLoaded(true);
       };
       checkVoices();
       window.speechSynthesis.onvoiceschanged = checkVoices;
@@ -75,7 +75,7 @@ export default function ListeningExercise() {
     setPlaying(false);
   }, [data]);
 
-  useEffect(() => { init(); }, [init]);
+  useEffect(() => { if (mounted) init(); }, [init, mounted]);
 
   function play() {
     const synth = synthRef.current;
@@ -110,9 +110,9 @@ export default function ListeningExercise() {
     }, 1800);
   }
 
-  if (!mounted || questions.length === 0) return null;
+  if (!mounted) return null;
 
-  if (qIdx >= questions.length) {
+  if (qIdx >= questions.length && questions.length > 0) {
     const pct = Math.round((correct / questions.length) * 100);
     return (
       <div className="text-center py-16">
@@ -120,9 +120,9 @@ export default function ListeningExercise() {
           <span className="text-4xl font-bold text-white">{pct}%</span>
         </div>
         <div className="text-2xl font-bold mb-1">{correct} / {questions.length}</div>
-        <p className="text-gray-500 mb-6">bonnes réponses</p>
+        <p className="text-gray-500 mb-6">{t("correct_answers")}</p>
         <button onClick={init} className="px-8 py-3 bg-gradient-to-r from-red-500 to-orange-400 text-white rounded-xl font-semibold hover:shadow-lg transition-all">
-          Recommencer
+          {t("restart")}
         </button>
       </div>
     );
@@ -163,10 +163,10 @@ export default function ListeningExercise() {
                 <div className="w-1 h-5 bg-red-500 rounded animate-pulse" style={{ animationDelay: "450ms" }} />
                 <div className="w-1 h-4 bg-red-400 rounded animate-pulse" style={{ animationDelay: "600ms" }} />
               </div>
-              <span className="text-sm font-medium">Écoute en cours...</span>
+              <span className="text-sm font-medium">{t("listening_status")}</span>
             </div>
           ) : (
-            <span className="text-gray-400">Appuie sur Écouter</span>
+            <span className="text-gray-400">{t("press_listen")}</span>
           )}
         </div>
 
@@ -174,9 +174,9 @@ export default function ListeningExercise() {
 
         <div className="flex gap-2 justify-center mb-4">
           {[
-            { v: 0.6, l: "🐢 Lent" },
-            { v: 0.8, l: "🚶 Normal" },
-            { v: 1.0, l: "🏃 Rapide" },
+            { v: 0.6, l: "🐢 " + t("slow") },
+            { v: 0.8, l: "🚶 " + t("normal") },
+            { v: 1.0, l: "🏃 " + t("fast") },
           ].map(({ v, l }) => (
             <button
               key={v}
@@ -197,11 +197,11 @@ export default function ListeningExercise() {
           disabled={playing || !voicesLoaded}
           className="px-10 py-3.5 bg-gradient-to-r from-red-500 to-orange-400 text-white rounded-xl font-bold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {playing ? "🔊 Lecture..." : "🔊 Écouter"}
+          {playing ? "🔊 " + t("listening_status") : "🔊 " + t("listen")}
         </button>
 
         {!voicesLoaded && mounted && (
-          <p className="text-xs text-orange-400 mt-2">Chargement des voix japonaises...</p>
+          <p className="text-xs text-orange-400 mt-2">{lang === "en" ? "Loading Japanese voices..." : "Chargement des voix japonaises..."}</p>
         )}
 
         {answered && (
