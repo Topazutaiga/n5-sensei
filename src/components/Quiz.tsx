@@ -9,7 +9,6 @@ const ALL_DATA = { vocab: VOCAB, kanji: KANJI, grammar: GRAMMAR };
 
 const MAX_Q = 350;
 const Q_PER_MODULE = 10;
-const TOTAL_MODULES = Math.ceil(MAX_Q / Q_PER_MODULE);
 
 interface QuizQuestion {
   jp: string;

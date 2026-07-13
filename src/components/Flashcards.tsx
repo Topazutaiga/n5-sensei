@@ -88,6 +88,11 @@ export default function Flashcards() {
   };
 
   function getMeaning(c: CardData, m: CardMode): string {
+    if (lang === "en") {
+      if (m === "vocab") return (c as VocabItem).meanEn || (c as VocabItem).mean;
+      if (m === "kanji") return (c as KanjiItem).meanEn || (c as KanjiItem).mean;
+      return (c as GrammarItem).meanEn || (c as GrammarItem).mean;
+    }
     if (m === "vocab") return (c as VocabItem).mean;
     if (m === "kanji") return (c as KanjiItem).mean;
     return (c as GrammarItem).mean;

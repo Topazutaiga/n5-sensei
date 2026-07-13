@@ -8,14 +8,13 @@ import { LISTENING } from "@/data";
 import { useI18n } from "@/lib/i18n";
 import { getAllExercises } from "@/data/jlpt-exercises";
 
-type TabType = "quiz" | "listening" | "lecture" | "phrase";
+type TabType = "listening" | "vocab" | "comprehension";
 type QuizMode = "vocab" | "kanji" | "grammar" | "mixed";
 
 const TABS: { id: TabType; labelFr: string; labelEn: string; icon: string }[] = [
-  { id: "quiz", labelFr: "Quiz", labelEn: "Quiz", icon: "📝" },
   { id: "listening", labelFr: "Écoute", labelEn: "Listening", icon: "🔊" },
-  { id: "lecture", labelFr: "Lecture", labelEn: "Reading", icon: "📖" },
-  { id: "phrase", labelFr: "Phrase", labelEn: "Sentence", icon: "📝" },
+  { id: "vocab", labelFr: "Vocab/Kanjis", labelEn: "Vocab/Kanji", icon: "📖" },
+  { id: "comprehension", labelFr: "Compréhension", labelEn: "Comprehension", icon: "📝" },
 ];
 
 const QUIZ_MODES: { id: QuizMode; labelFr: string; labelEn: string; icon: string }[] = [
@@ -45,33 +44,26 @@ function ModuleSelector({ module, total, onChange }: { module: number; total: nu
 
 export default function ExercicesTabs() {
   const { t, lang } = useI18n();
-  const [tab, setTab] = useState<TabType>("quiz");
+  const [tab, setTab] = useState<TabType>("listening");
   const [listeningMode, setListeningMode] = useState<"phrase" | "dialogue">("phrase");
   const [listeningModule, setListeningModule] = useState(1);
-  const [quizMode, setQuizMode] = useState<QuizMode>("vocab");
-  const [quizModule, setQuizModule] = useState(1);
-  const [lectureModule, setLectureModule] = useState(1);
-  const [phraseModule, setPhraseModule] = useState(1);
+  const [vocabMode, setVocabMode] = useState<QuizMode>("vocab");
+  const [vocabModule, setVocabModule] = useState(1);
+  const [comprehensionModule, setComprehensionModule] = useState(1);
 
   const totalListeningModules = useMemo(() => {
     const data = listeningMode === "phrase" ? LISTENING.phrases : LISTENING.dialogues;
     return Math.ceil(data.length / Q_PER_MODULE);
   }, [listeningMode]);
 
-  const totalQuizModules = useMemo(() => 35, []);
+  const totalVocabModules = useMemo(() => 35, []);
 
-  const lectureExercises = useMemo(() => {
-    const all = getAllExercises();
-    return all.filter((e) => e.type === "vocab_reading" || e.type === "kanji_reading");
-  }, []);
-
-  const phraseExercises = useMemo(() => {
+  const comprehensionExercises = useMemo(() => {
     const all = getAllExercises();
     return all.filter((e) => e.type === "sentence_completion" || e.type === "grammar_choice" || e.type === "reading_comp");
   }, []);
 
-  const totalLectureModules = useMemo(() => Math.ceil(lectureExercises.length / Q_PER_MODULE), [lectureExercises]);
-  const totalPhraseModules = useMemo(() => Math.ceil(phraseExercises.length / Q_PER_MODULE), [phraseExercises]);
+  const totalComprehensionModules = useMemo(() => Math.ceil(comprehensionExercises.length / Q_PER_MODULE), [comprehensionExercises]);
 
   return (
     <div>
@@ -89,27 +81,6 @@ export default function ExercicesTabs() {
           </button>
         ))}
       </div>
-
-      {tab === "quiz" && (
-        <>
-          {/* Quiz mode sub-tabs */}
-          <div className="flex gap-2 mb-3">
-            {QUIZ_MODES.map((m) => (
-              <button key={m.id} onClick={() => { setQuizMode(m.id); setQuizModule(1); }}
-                className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
-                  quizMode === m.id
-                    ? "bg-gradient-to-r from-red-500 to-orange-400 text-white shadow-sm"
-                    : "border border-gray-200 dark:border-gray-700 text-gray-500"
-                }`}
-              >
-                {m.icon} {lang === "en" ? m.labelEn : m.labelFr}
-              </button>
-            ))}
-          </div>
-          <ModuleSelector module={quizModule} total={totalQuizModules} onChange={setQuizModule} />
-          <Quiz forcedModule={quizModule} forcedMode={quizMode} />
-        </>
-      )}
 
       {tab === "listening" && (
         <>
@@ -139,17 +110,31 @@ export default function ExercicesTabs() {
         </>
       )}
 
-      {tab === "lecture" && (
+      {tab === "vocab" && (
         <>
-          <ModuleSelector module={lectureModule} total={totalLectureModules} onChange={setLectureModule} />
-          <JLPTExercises defaultType="lecture" forcedModule={lectureModule} />
+          {/* Vocab mode sub-tabs */}
+          <div className="flex gap-2 mb-3">
+            {QUIZ_MODES.map((m) => (
+              <button key={m.id} onClick={() => { setVocabMode(m.id); setVocabModule(1); }}
+                className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
+                  vocabMode === m.id
+                    ? "bg-gradient-to-r from-red-500 to-orange-400 text-white shadow-sm"
+                    : "border border-gray-200 dark:border-gray-700 text-gray-500"
+                }`}
+              >
+                {m.icon} {lang === "en" ? m.labelEn : m.labelFr}
+              </button>
+            ))}
+          </div>
+          <ModuleSelector module={vocabModule} total={totalVocabModules} onChange={setVocabModule} />
+          <Quiz key={`${vocabMode}-${vocabModule}`} forcedModule={vocabModule} forcedMode={vocabMode} />
         </>
       )}
 
-      {tab === "phrase" && (
+      {tab === "comprehension" && (
         <>
-          <ModuleSelector module={phraseModule} total={totalPhraseModules} onChange={setPhraseModule} />
-          <JLPTExercises defaultType="phrase" forcedModule={phraseModule} />
+          <ModuleSelector module={comprehensionModule} total={totalComprehensionModules} onChange={setComprehensionModule} />
+          <JLPTExercises key={`comprehension-${comprehensionModule}`} defaultType="phrase" forcedModule={comprehensionModule} />
         </>
       )}
     </div>

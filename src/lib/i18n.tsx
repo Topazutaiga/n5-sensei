@@ -132,7 +132,7 @@ const translations = {
     progress: "Progress",
     home: "Home",
     choose_answer: "Choose the answer",
-    module: "Module",
+    module: "Set",
     all: "All",
   },
 } as const;
