@@ -275,19 +275,7 @@ function generateGrammarChoice(): JLPTQuestion[] {
     });
   }
 
-  // Fill with grammar data - ask for meaning instead of reading
-  for (const g of grammarPool) {
-    if (questions.length >= 350) break;
-    const wrongs = pickRandom(GRAMMAR, 3, g).map((x) => x.mean);
-    questions.push({
-      type: "grammar_choice",
-      question: `「${g.jp}」の意味は？`,
-      options: shuffle([g.mean, ...wrongs]),
-      answer: g.mean,
-    });
-  }
-
-  // Fill remaining
+  // Fill remaining with sentence_completion style questions instead of grammar reading
   while (questions.length < 350) {
     const idx = questions.length % GRAMMAR_ITEMS.length;
     const item = GRAMMAR_ITEMS[idx];
