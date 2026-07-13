@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 
 type Lang = "fr" | "en";
 
@@ -145,6 +145,13 @@ const I18nContext = createContext<I18nContextType>({
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>("fr");
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("n5sensei_lang") as Lang | null;
+    if (saved === "fr" || saved === "en") setLang(saved);
+    setReady(true);
+  }, []);
 
   const t = useCallback(
     (key: keyof typeof translations.fr): string => {
@@ -154,8 +161,14 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   );
 
   const toggleLang = useCallback(() => {
-    setLang((l) => (l === "fr" ? "en" : "fr"));
+    setLang((l) => {
+      const next = l === "fr" ? "en" : "fr";
+      localStorage.setItem("n5sensei_lang", next);
+      return next;
+    });
   }, []);
+
+  if (!ready) return null;
 
   return (
     <I18nContext.Provider value={{ lang, t, toggleLang }}>

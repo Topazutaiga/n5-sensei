@@ -15,6 +15,15 @@ interface QuizQuestion {
   wrongs: string[];
 }
 
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 export default function Quiz() {
   const { t } = useI18n();
   const [mode, setMode] = useState<QuizMode>("vocab");
@@ -29,17 +38,14 @@ export default function Quiz() {
     const pool: { mode: string; jp: string; read: string; mean: string; idx: number }[] = [];
     modes.forEach((m) => {
       const data = ALL_DATA[m];
-      for (let i = 0; i < Math.min(50, data.length); i++) {
-        pool.push({ mode: m, ...data[i], idx: i });
-      }
+      const indices = shuffle(data.map((_, i) => i)).slice(0, 10);
+      indices.forEach((i) => pool.push({ mode: m, ...data[i], idx: i }));
     });
-    shuffleArr(pool);
-    const qs: QuizQuestion[] = pool.slice(0, 10).map((item) => {
+    const qs: QuizQuestion[] = shuffle(pool).map((item) => {
       const data = ALL_DATA[item.mode as keyof typeof ALL_DATA];
       const correctMean = item.mean;
       const pool2 = data.filter((d, i) => i !== item.idx && d.mean !== correctMean).map((d) => d.mean);
-      shuffleArr(pool2);
-      return { mode: item.mode, jp: item.jp, read: item.read, mean: item.mean, wrongs: pool2.slice(0, 3) };
+      return { mode: item.mode, jp: item.jp, read: item.read, mean: item.mean, wrongs: shuffle(pool2).slice(0, 3) };
     });
     setQuestions(qs);
     setQIdx(0);
@@ -80,7 +86,7 @@ export default function Quiz() {
 
   if (questions.length === 0) return null;
   const q = questions[qIdx];
-  const opts = useMemo(() => shuffleArr([q.mean, ...q.wrongs]), [q]);
+  const opts = useMemo(() => shuffle([q.mean, ...q.wrongs]), [qIdx, questions]);
 
   return (
     <div>
@@ -133,12 +139,4 @@ export default function Quiz() {
       </div>
     </div>
   );
-}
-
-function shuffleArr<T>(arr: T[]): T[] {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
 }

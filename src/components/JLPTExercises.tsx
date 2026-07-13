@@ -15,6 +15,15 @@ const TYPE_LABELS: Record<ExerciseType, { fr: string; en: string; emoji: string 
   reading_comp: { fr: "Lecture", en: "Reading", emoji: "📚" },
 };
 
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 export default function JLPTExercises() {
   const { t } = useI18n();
   const [type, setType] = useState<ExerciseType>("all");
@@ -142,12 +151,4 @@ export default function JLPTExercises() {
       </div>
     </div>
   );
-}
-
-function shuffle<T>(arr: T[]): T[] {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
 }

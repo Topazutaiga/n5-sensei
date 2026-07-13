@@ -5,6 +5,15 @@ import { LISTENING } from "@/data";
 
 type AudioMode = "phrase" | "dialogue";
 
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 export default function ListeningExercise() {
   const [mode, setMode] = useState<AudioMode>("phrase");
   const [questions, setQuestions] = useState<number[]>([]);
@@ -12,16 +21,24 @@ export default function ListeningExercise() {
   const [correct, setCorrect] = useState(0);
   const [answered, setAnswered] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [revealed, setRevealed] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [rate, setRate] = useState(0.8);
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [voicesLoaded, setVoicesLoaded] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     if (typeof window !== "undefined") {
       synthRef.current = window.speechSynthesis;
+      const checkVoices = () => {
+        const voices = window.speechSynthesis.getVoices();
+        if (voices.some((v) => v.lang.startsWith("ja"))) {
+          setVoicesLoaded(true);
+        }
+      };
+      checkVoices();
+      window.speechSynthesis.onvoiceschanged = checkVoices;
     }
   }, []);
 
@@ -34,41 +51,31 @@ export default function ListeningExercise() {
 
   const correctAnswer = useMemo((): string => {
     if (!currentItem) return "";
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const item = currentItem as any;
-    if (item.note) return String(item.note);
-    return String(item.mean);
+    return currentItem.mean;
   }, [currentItem]);
 
   const options = useMemo((): string[] => {
     if (!currentItem) return [];
     const wrongs = new Set<string>();
+    const allAnswers = data.map((item) => item.mean);
     while (wrongs.size < 3) {
-      const r = Math.floor(Math.random() * data.length);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const item = data[r] as any;
-      const val: string = item.note ? String(item.note) : String(item.mean);
+      const val = allAnswers[Math.floor(Math.random() * allAnswers.length)];
       if (val !== correctAnswer && !wrongs.has(val)) wrongs.add(val);
     }
-    const result: string[] = [...Array.from(wrongs), correctAnswer];
-    return shuffleArr(result);
+    return shuffle([...wrongs, correctAnswer]);
   }, [currentItem, correctAnswer, data]);
 
   const init = useCallback(() => {
-    const indices = data.map((_, i) => i);
-    shuffleArr(indices);
+    const indices = shuffle(data.map((_, i) => i));
     setQuestions(indices.slice(0, 10));
     setQIdx(0);
     setCorrect(0);
     setAnswered(false);
     setSelectedAnswer(null);
-    setRevealed(false);
     setPlaying(false);
   }, [data]);
 
-  useEffect(() => {
-    init();
-  }, [init]);
+  useEffect(() => { init(); }, [init]);
 
   function play() {
     const synth = synthRef.current;
@@ -95,23 +102,21 @@ export default function ListeningExercise() {
     if (answered) return;
     setAnswered(true);
     setSelectedAnswer(chosen);
-    if (chosen === String(correctAnswer)) setCorrect((c) => c + 1);
-    setRevealed(true);
+    if (chosen === correctAnswer) setCorrect((c) => c + 1);
     setTimeout(() => {
       setQIdx((i) => i + 1);
       setAnswered(false);
       setSelectedAnswer(null);
-      setRevealed(false);
     }, 1800);
   }
 
-  if (questions.length === 0) return null;
+  if (!mounted || questions.length === 0) return null;
 
   if (qIdx >= questions.length) {
     const pct = Math.round((correct / questions.length) * 100);
     return (
       <div className="text-center py-16">
-        <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gradient-to-br from-red-500 to-orange-400 mb-6">
+        <div className="inline-flex items-center justify-center w-28 h-28 rounded-full bg-gradient-to-br from-red-500 to-orange-400 mb-6 shadow-lg">
           <span className="text-4xl font-bold text-white">{pct}%</span>
         </div>
         <div className="text-2xl font-bold mb-1">{correct} / {questions.length}</div>
@@ -168,7 +173,11 @@ export default function ListeningExercise() {
         <p className="text-sm text-gray-500 mb-5">{currentItem.q}</p>
 
         <div className="flex gap-2 justify-center mb-4">
-          {[{ v: 0.7, l: "0.7x" }, { v: 0.85, l: "0.85x" }, { v: 1, l: "1x" }].map(({ v, l }) => (
+          {[
+            { v: 0.6, l: "🐢 Lent" },
+            { v: 0.8, l: "🚶 Normal" },
+            { v: 1.0, l: "🏃 Rapide" },
+          ].map(({ v, l }) => (
             <button
               key={v}
               onClick={() => setRate(v)}
@@ -185,16 +194,23 @@ export default function ListeningExercise() {
 
         <button
           onClick={play}
-          disabled={playing}
+          disabled={playing || !voicesLoaded}
           className="px-10 py-3.5 bg-gradient-to-r from-red-500 to-orange-400 text-white rounded-xl font-bold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {playing ? "🔊 Lecture..." : "🔊 Écouter"}
         </button>
 
-        {revealed && (
-          <div className="mt-5 pt-5 border-t border-gray-100 dark:border-gray-800">
-            <span className="text-sm text-gray-400">Réponse : </span>
-            <span className="text-sm font-semibold text-green-600">{String(correctAnswer)}</span>
+        {!voicesLoaded && mounted && (
+          <p className="text-xs text-orange-400 mt-2">Chargement des voix japonaises...</p>
+        )}
+
+        {answered && (
+          <div className="mt-5 pt-5 border-t border-gray-100 dark:border-gray-800 space-y-1">
+            <div className="text-lg font-bold text-green-600">{currentItem.jp}</div>
+            <div className="text-sm text-gray-500">{correctAnswer}</div>
+            {mode === "dialogue" && "note" in currentItem && (
+              <div className="text-xs text-gray-400 mt-1">{(currentItem as { note: string }).note}</div>
+            )}
           </div>
         )}
       </div>
@@ -218,17 +234,14 @@ export default function ListeningExercise() {
         })}
       </div>
 
-      <div className="text-center mt-4 text-sm text-gray-400 font-medium">
-        {qIdx + 1} / {questions.length}
+      <div className="text-center mt-4">
+        <div className="inline-flex items-center gap-2 text-sm text-gray-400">
+          <div className="h-1.5 w-24 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-red-500 to-orange-400 rounded-full" style={{ width: `${((qIdx + 1) / questions.length) * 100}%` }} />
+          </div>
+          {qIdx + 1} / {questions.length}
+        </div>
       </div>
     </div>
   );
-}
-
-function shuffleArr<T>(arr: T[]): T[] {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
 }
