@@ -21,6 +21,29 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+const EXTRA_DISTRACTORS = [
+  { emoji: "🤷", text: "わかりません" },
+  { emoji: "🙅", text: "いいえ" },
+  { emoji: "💭", text: "ちょっと" },
+  { emoji: "🤔", text: "どうですか" },
+  { emoji: "😐", text: "そうですね" },
+  { emoji: "😲", text: "そうですか" },
+  { emoji: "💡", text: "いいですね" },
+  { emoji: "👎", text: "よくないです" },
+  { emoji: "👀", text: "ちょっとまって" },
+  { emoji: "💪", text: "がんばります" },
+];
+
+function ensure4opts(opts: { emoji: string; text: string }[]): { emoji: string; text: string }[] {
+  if (opts.length >= 4) return opts;
+  const usedTexts = new Set(opts.map((o) => o.text));
+  const pool = shuffle(EXTRA_DISTRACTORS.filter((d) => !usedTexts.has(d.text)));
+  while (opts.length < 4) {
+    opts.push(pool.length > 0 ? pool[opts.length % pool.length] : { emoji: "❓", text: "? " + opts.length });
+  }
+  return opts;
+}
+
 // === もんだい４ (Quick Response) templates for PHRASES ===
 const Q4_TEMPLATES: { phrase: string; options: { emoji: string; text: string }[]; answerIndex: number }[] = [
   { phrase: "おはようございます。", options: [{ emoji: "🙂", text: "おはようございます。" }, { emoji: "😴", text: "おやすみなさい。" }, { emoji: "👋", text: "さようなら。" }], answerIndex: 0 },
@@ -218,6 +241,7 @@ function generatePhrases(): JLTPListeningItem[] {
     items.push({ audio: p.audio, question: p.question, options: p.opts, answerIndex: p.ai });
   }
 
+  items.forEach((item) => { item.options = ensure4opts(item.options); });
   return shuffle(items).slice(0, 350);
 }
 
@@ -281,6 +305,7 @@ function generateDialogues(): JLTPListeningItem[] {
     }
   }
 
+  items.forEach((item) => { item.options = ensure4opts(item.options); });
   return shuffle(items).slice(0, 350);
 }
 

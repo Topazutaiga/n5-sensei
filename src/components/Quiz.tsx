@@ -34,8 +34,6 @@ export default function Quiz() {
   const [answered, setAnswered] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
 
-  useEffect(() => { setMounted(true); }, []);
-
   const initQuiz = useCallback(() => {
     const modes = mode === "mixed" ? (["vocab", "kanji", "grammar"] as const) : [mode];
     const pool: { mode: string; jp: string; read: string; mean: string; idx: number }[] = [];
@@ -61,12 +59,20 @@ export default function Quiz() {
   }, [mode]);
 
   useEffect(() => { if (mounted) initQuiz(); }, [initQuiz, mounted]);
+  useEffect(() => { setMounted(true); }, []);
+
+  const currQ = questions[qIdx] || null;
+  const opts = useMemo(() => {
+    const q = questions[qIdx];
+    if (!q) return [];
+    return shuffle([q.mean, ...q.wrongs]);
+  }, [qIdx, questions]);
 
   function answer(chosen: string) {
-    if (answered || questions.length === 0 || qIdx >= questions.length) return;
+    if (answered || !currQ) return;
     setAnswered(true);
     setSelectedAnswer(chosen);
-    if (chosen === questions[qIdx].mean) setCorrect((c) => c + 1);
+    if (chosen === currQ.mean) setCorrect((c) => c + 1);
     setTimeout(() => {
       setQIdx((i) => i + 1);
       setAnswered(false);
@@ -94,9 +100,7 @@ export default function Quiz() {
 
   if (questions.length === 0) return null;
   if (qIdx >= questions.length) return null;
-  const q = questions[qIdx];
-  if (!q) return null;
-  const opts = useMemo(() => shuffle([q.mean, ...q.wrongs]), [qIdx]);
+  if (!currQ) return null;
 
   return (
     <div>
@@ -120,16 +124,16 @@ export default function Quiz() {
       </div>
 
       <div className="bg-white dark:bg-[#252220] rounded-2xl p-8 shadow-lg text-center mb-6 border border-gray-100 dark:border-gray-800">
-        <div className="text-5xl font-bold mb-2">{q.jp}</div>
-        {q.mode !== "kanji" && <div className="text-lg text-gray-500">{q.read}</div>}
+        <div className="text-5xl font-bold mb-2">{currQ.jp}</div>
+        {currQ.mode !== "kanji" && <div className="text-lg text-gray-500">{currQ.read}</div>}
         <p className="text-sm text-gray-400 mt-4">{lang === "en" ? "What does it mean?" : t("which_meaning")}</p>
       </div>
 
       <div className="flex flex-col gap-3">
         {opts.map((o, i) => {
           let cls = "border-2 border-gray-200 dark:border-gray-700 hover:border-red-300 bg-white dark:bg-[#252220]";
-          if (answered && o === q.mean) cls = "border-2 border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700";
-          if (answered && o === selectedAnswer && o !== q.mean) cls = "border-2 border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700";
+          if (answered && o === currQ.mean) cls = "border-2 border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700";
+          if (answered && o === selectedAnswer && o !== currQ.mean) cls = "border-2 border-red-500 bg-red-50 dark:bg-red-900/20 text-red-700";
           return (
             <button key={`${qIdx}-${i}`} onClick={() => answer(o)} disabled={answered}
               className={`py-3.5 px-5 rounded-xl text-center font-medium transition-all ${cls}`}>{o}</button>

@@ -133,10 +133,6 @@ export default function JLPTExercises() {
           {typeInfo.emoji} {typeInfo.fr}
         </span>
 
-        {q.context && (
-          <p className="text-xs text-gray-400 mb-3 italic bg-gray-50 dark:bg-gray-900 p-2 rounded-lg">{q.context}</p>
-        )}
-
         <div className="text-lg font-semibold whitespace-pre-line">{q.question}</div>
       </div>
 

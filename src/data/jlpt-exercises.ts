@@ -33,24 +33,24 @@ function generateVocabReading(): JLPTQuestion[] {
     if (used.has(key)) continue;
     used.add(key);
 
-    const wrongs = pickRandom(VOCAB, 3, item).map((v) => v.mean);
+    const wrongs = pickRandom(VOCAB, 3, item).map((v) => v.read);
     questions.push({
       type: "vocab_reading",
-      question: `「${item.jp}」の意味は？`,
-      options: shuffle([item.mean, ...wrongs]),
-      answer: item.mean,
+      question: `「${item.jp}」の読み方は？`,
+      options: shuffle([item.read, ...wrongs]),
+      answer: item.read,
     });
   }
 
   // Fill remaining with variations
   while (questions.length < 350) {
     const item = pool[questions.length % pool.length];
-    const wrongs = pickRandom(VOCAB, 3, item).map((v) => v.mean);
+    const wrongs = pickRandom(VOCAB, 3, item).map((v) => v.read);
     questions.push({
       type: "vocab_reading",
-      question: `「${item.jp}」とはどういう意味ですか？`,
-      options: shuffle([item.mean, ...wrongs]),
-      answer: item.mean,
+      question: `「${item.jp}」はどう読みますか？`,
+      options: shuffle([item.read, ...wrongs]),
+      answer: item.read,
     });
   }
 
@@ -194,7 +194,6 @@ function generateSentenceCompletion(): JLPTQuestion[] {
     questions.push({
       type: "sentence_completion",
       question: tmpl.sentence,
-      context: tmpl.context,
       options: shuffle(tmpl.options),
       answer: tmpl.answer,
     });
@@ -204,13 +203,12 @@ function generateSentenceCompletion(): JLPTQuestion[] {
   const vocabPool = shuffle([...VOCAB]);
   for (const item of vocabPool) {
     if (questions.length >= 350) break;
-    const wrongs = pickRandom(VOCAB, 3, item).map((v) => v.mean);
+    const wrongs = pickRandom(VOCAB, 3, item).map((v) => v.read);
     questions.push({
       type: "sentence_completion",
-      question: `___は ${item.mean}です。`,
-      context: `"${item.mean}"は？`,
-      options: shuffle([item.mean, ...wrongs]),
-      answer: item.mean,
+      question: `___は ${item.jp}です。`,
+      options: shuffle([item.jp, ...wrongs]),
+      answer: item.jp,
     });
   }
 
@@ -272,7 +270,6 @@ function generateGrammarChoice(): JLPTQuestion[] {
     questions.push({
       type: "grammar_choice",
       question: item.sentence,
-      context: item.context,
       options: shuffle(item.options),
       answer: item.answer,
     });
@@ -297,7 +294,6 @@ function generateGrammarChoice(): JLPTQuestion[] {
     questions.push({
       type: "grammar_choice",
       question: item.sentence,
-      context: item.context,
       options: shuffle(item.options),
       answer: item.answer,
     });
@@ -336,7 +332,6 @@ function generateReadingComp(): JLPTQuestion[] {
     questions.push({
       type: "reading_comp",
       question: `${p.text}\n\n${p.question}`,
-      context: p.context,
       options: shuffle(p.options),
       answer: p.answer,
     });
@@ -348,7 +343,6 @@ function generateReadingComp(): JLPTQuestion[] {
     questions.push({
       type: "reading_comp",
       question: `${p.text}\n\n${p.question}`,
-      context: p.context,
       options: shuffle(p.options),
       answer: p.answer,
     });

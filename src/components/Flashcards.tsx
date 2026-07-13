@@ -114,7 +114,7 @@ export default function Flashcards() {
     let newLevel = prev.level;
     if (level === 0) newLevel = Math.max(0, prev.level - 1);
     else if (level === 1) newLevel = Math.min(3, prev.level + 1);
-    else if (level === 2) newLevel = Math.min(5, prev.level + 2);
+    else if (level === 2) newLevel = Math.max(3, Math.min(5, prev.level + 2));
     const intervals = [0, 0, 0, 1, 2, 10];
     const days = intervals[Math.min(newLevel, intervals.length - 1)];
     const next = new Date();
