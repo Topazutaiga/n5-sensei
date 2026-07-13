@@ -111,9 +111,9 @@ export default function Flashcards() {
     const key = `${mode}_${i}`;
     const prev = getCardState(mode, i);
     let newLevel = prev.level;
-    if (level === 0) newLevel = Math.max(0, prev.level - 1);
-    else if (level === 1) newLevel = Math.min(3, prev.level + 1);
-    else if (level === 2) newLevel = Math.max(3, Math.min(5, prev.level + 2));
+    if (level === 0) newLevel = 0;
+    else if (level === 1) newLevel = 2;
+    else if (level === 2) newLevel = 4;
     const intervals = [0, 0, 0, 1, 2, 10];
     const days = intervals[Math.min(newLevel, intervals.length - 1)];
     const next = new Date();
@@ -233,12 +233,7 @@ export default function Flashcards() {
         {flipped ? (
           <>
             <div className="text-xl text-gray-500 mb-1">{reading}</div>
-            <div className="text-base text-gray-400">
-              {lang === "en" ? `🔊 ${reading}` : meaning}
-            </div>
-            {lang === "en" && (
-              <div className="text-xs text-gray-400 mt-1">FR: {meaning}</div>
-            )}
+            <div className="text-base text-gray-400">{meaning}</div>
           </>
         ) : (
           <p className="text-sm text-gray-400 mt-4">{lang === "en" ? "Tap to flip" : "Clique pour retourner"}</p>

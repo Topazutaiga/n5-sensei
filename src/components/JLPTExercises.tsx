@@ -26,7 +26,7 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-export default function JLPTExercises({ defaultType = "all" }: { defaultType?: ExerciseType }) {
+export default function JLPTExercises({ defaultType = "all", forcedModule }: { defaultType?: ExerciseType; forcedModule?: number }) {
   const { t, lang } = useI18n();
   const [mounted, setMounted] = useState(false);
   const [type, setType] = useState<ExerciseType>(defaultType);
@@ -35,8 +35,11 @@ export default function JLPTExercises({ defaultType = "all" }: { defaultType?: E
   const [correct, setCorrect] = useState(0);
   const [answered, setAnswered] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const [started, setStarted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
+
+  const isAuto = defaultType === "lecture" || defaultType === "phrase";
 
   const allExercises = useMemo(() => mounted ? getAllExercises() : [], [mounted]);
 
@@ -48,13 +51,32 @@ export default function JLPTExercises({ defaultType = "all" }: { defaultType?: E
     return shuffle(allExercises.filter((e) => e.type === type));
   }, [type, allExercises, mounted]);
 
+  useEffect(() => {
+    if (mounted && isAuto && !started) {
+      const pool = filteredExercises;
+      if (pool.length > 0) {
+        const sliced = forcedModule
+          ? pool.slice((forcedModule - 1) * 10, forcedModule * 10)
+          : pool.slice(0, 10);
+        setQuestions(sliced);
+        setQIdx(0);
+        setCorrect(0);
+        setStarted(true);
+      }
+    }
+  }, [mounted, started, isAuto, filteredExercises, forcedModule]);
+
   function start() {
     const pool = type === "all" ? shuffle([...allExercises]) : shuffle(allExercises.filter((e) => e.type === type));
-    setQuestions(pool.slice(0, 10));
+    const sliced = forcedModule
+      ? pool.slice((forcedModule - 1) * 10, forcedModule * 10)
+      : pool.slice(0, 10);
+    setQuestions(sliced);
     setQIdx(0);
     setCorrect(0);
     setAnswered(false);
     setSelectedAnswer(null);
+    setStarted(true);
   }
 
   function answer(chosen: string) {
@@ -71,11 +93,13 @@ export default function JLPTExercises({ defaultType = "all" }: { defaultType?: E
 
   if (!mounted) return null;
 
+  if (isAuto && questions.length === 0) return null;
+
   if (questions.length === 0) {
     return (
       <div>
         <div className="flex flex-wrap gap-2 mb-6">
-          {(Object.keys(TYPE_LABELS) as ExerciseType[]).map((t) => (
+          {(Object.keys(TYPE_LABELS) as ExerciseType[]).filter((t) => t !== "lecture" && t !== "phrase").map((t) => (
             <button
               key={t}
               onClick={() => setType(t)}

@@ -7,6 +7,10 @@ import { useI18n } from "@/lib/i18n";
 type QuizMode = "vocab" | "kanji" | "grammar" | "mixed";
 const ALL_DATA = { vocab: VOCAB, kanji: KANJI, grammar: GRAMMAR };
 
+const MAX_Q = 350;
+const Q_PER_MODULE = 10;
+const TOTAL_MODULES = Math.ceil(MAX_Q / Q_PER_MODULE);
+
 interface QuizQuestion {
   jp: string;
   correct: string;
@@ -22,12 +26,10 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-const MAX_Q = 350;
-
-export default function Quiz() {
+export default function Quiz({ forcedModule, forcedMode }: { forcedModule?: number; forcedMode?: QuizMode }) {
   const { t, lang } = useI18n();
   const [mounted, setMounted] = useState(false);
-  const [mode, setMode] = useState<QuizMode>("vocab");
+  const [mode, setMode] = useState<QuizMode>(forcedMode || "vocab");
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [qIdx, setQIdx] = useState(0);
   const [correct, setCorrect] = useState(0);
@@ -44,7 +46,9 @@ export default function Quiz() {
       const slice = shuffle(d.map((x) => ({ jp: x.jp, read: x.read })));
       slice.slice(0, perMode).forEach((x) => pool.push(x));
     });
-    const qs: QuizQuestion[] = shuffle(pool).map((item) => {
+    const allShuffled = shuffle(pool);
+    const selected = forcedModule ? allShuffled.slice((forcedModule - 1) * Q_PER_MODULE, forcedModule * Q_PER_MODULE) : allShuffled.slice(0, Q_PER_MODULE);
+    const qs: QuizQuestion[] = selected.map((item) => {
       const allReads = ALL_DATA["vocab"].concat(ALL_DATA["kanji"]).concat(ALL_DATA["grammar"]).map((x) => x.read);
       const wrongPool = shuffle(allReads.filter((r) => r !== item.read));
       const wrongs = wrongPool.slice(0, 3);
@@ -55,7 +59,7 @@ export default function Quiz() {
     setCorrect(0);
     setAnswered(false);
     setSelectedAnswer(null);
-  }, [mode]);
+  }, [mode, forcedModule]);
 
   useEffect(() => { if (mounted) initQuiz(); }, [initQuiz, mounted]);
   useEffect(() => { setMounted(true); }, []);
@@ -104,7 +108,7 @@ export default function Quiz() {
   return (
     <div>
       <div className="flex gap-2 mb-6 flex-wrap">
-        {(["vocab", "kanji", "grammar", "mixed"] as QuizMode[]).map((m) => (
+        {!forcedMode && (["vocab", "kanji", "grammar", "mixed"] as QuizMode[]).map((m) => (
           <button key={m} onClick={() => setMode(m)}
             className={`px-4 py-2.5 rounded-full text-sm font-semibold transition-all ${
               mode === m ? "bg-gradient-to-r from-red-500 to-orange-400 text-white shadow-md" : "border-2 border-gray-200 dark:border-gray-700 text-gray-500 hover:border-red-300"
