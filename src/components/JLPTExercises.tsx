@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { getAllExercises, type JLPTQuestion } from "@/data/jlpt-exercises";
 import { useI18n } from "@/lib/i18n";
 import { getGamification, saveGamification, addXp, checkAchievements, updateMissions } from "@/lib/gamification";
+import { loseHeart } from "@/lib/hearts";
 
 type ExerciseType = "all" | "vocab_reading" | "kanji_reading" | "sentence_completion" | "grammar_choice" | "reading_comp" | "lecture" | "phrase";
 
@@ -101,6 +102,8 @@ export default function JLPTExercises({ defaultType = "all", forcedModule }: { d
         return m;
       });
       saveGamification(checkAchievements(addXp(g, 15), {}));
+    } else {
+      loseHeart();
     }
     setTimeout(() => {
       setQIdx((i) => i + 1);

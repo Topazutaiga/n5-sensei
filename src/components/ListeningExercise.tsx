@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { LISTENING, type JLTPListeningItem } from "@/data";
 import { useI18n } from "@/lib/i18n";
 import { getGamification, saveGamification, addXp, checkAchievements, updateMissions } from "@/lib/gamification";
+import { loseHeart } from "@/lib/hearts";
 
 type AudioMode = "phrase" | "dialogue";
 
@@ -117,6 +118,8 @@ export default function ListeningExercise({ forcedModule, forcedMode }: { forced
         return m;
       });
       saveGamification(checkAchievements(addXp(g, 25), {}));
+    } else {
+      loseHeart();
     }
     setResults((prev) => [...prev, { item: currentItem, correct: isCorrect }]);
     setTimeout(() => {

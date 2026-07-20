@@ -6,6 +6,7 @@ import { createSupabaseClient } from "@/lib/supabase/client";
 import { useEffect, useState, useCallback } from "react";
 import { I18nProvider, useI18n } from "@/lib/i18n";
 import SakuraPetals from "@/components/SakuraPetals";
+import HeartsDisplay from "@/components/HeartsDisplay";
 import type { VocabItem, KanjiItem, GrammarItem } from "@/data";
 
 const NAV_ITEMS = [
@@ -133,6 +134,7 @@ function DashboardNav({ children }: { children: React.ReactNode }) {
             N5 <span className="bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent">Sensei</span>
           </Link>
           <div className="flex items-center gap-1.5">
+            <HeartsDisplay compact />
             <button
               onClick={() => setSearchOpen(true)}
               className="w-9 h-9 flex items-center justify-center rounded-full text-base hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"

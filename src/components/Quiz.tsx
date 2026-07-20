@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { VOCAB, KANJI, GRAMMAR } from "@/data";
 import { useI18n } from "@/lib/i18n";
 import { getGamification, saveGamification, addXp, checkAchievements, updateMissions } from "@/lib/gamification";
+import { loseHeart } from "@/lib/hearts";
 
 type QuizMode = "vocab" | "kanji" | "grammar" | "mixed";
 const ALL_DATA = { vocab: VOCAB, kanji: KANJI, grammar: GRAMMAR };
@@ -98,6 +99,8 @@ export default function Quiz({ forcedModule, forcedMode }: { forcedModule?: numb
         return m;
       });
       saveGamification(checkAchievements(addXp(g, 20), {}));
+    } else {
+      loseHeart();
     }
     setTimeout(() => {
       setQIdx((i) => i + 1);
