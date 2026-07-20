@@ -22,6 +22,22 @@ export const metadata: Metadata = {
     description: "Flashcards, quiz et exercices pour réussir le JLPT N5.",
     type: "website",
   },
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    title: "N5 Sensei",
+    statusBarStyle: "default",
+  },
+  icons: {
+    apple: "/icon-192.png",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-title": "N5 Sensei",
+    "msapplication-tilecolor": "#ef4444",
+    "msapplication-tileimage": "/icon-192.png",
+  },
 };
 
 export default function RootLayout({

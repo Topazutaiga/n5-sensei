@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { LISTENING, type JLTPListeningItem } from "@/data";
 import { useI18n } from "@/lib/i18n";
+import { getGamification, saveGamification, addXp, checkAchievements, updateMissions } from "@/lib/gamification";
 
 type AudioMode = "phrase" | "dialogue";
 
@@ -52,6 +53,18 @@ export default function ListeningExercise({ forcedModule, forcedMode }: { forced
     return items[qIdx];
   }, [items, qIdx]);
 
+  // Award XP when listening session completes
+  useEffect(() => {
+    if (qIdx >= items.length && items.length > 0 && correct > 0) {
+      const g = updateMissions(getGamification());
+      g.dailyMissions = g.dailyMissions.map((m) => {
+        if (m.id === "listen_3") return { ...m, progress: Math.min(m.target, m.progress + 1) };
+        return m;
+      });
+      saveGamification(checkAchievements(addXp(g, correct * 3), {}));
+    }
+  }, [qIdx, items.length, correct]);
+
   const init = useCallback(() => {
     if (forcedModule === undefined) {
       setItems(shuffle(data).slice(0, 10));
@@ -93,7 +106,18 @@ export default function ListeningExercise({ forcedModule, forcedMode }: { forced
     setAnswered(true);
     setSelectedAnswer(idx);
     const isCorrect = idx === currentItem.answerIndex;
-    if (isCorrect) setCorrect((c) => c + 1);
+    if (isCorrect) {
+      setCorrect((c) => c + 1);
+      const g = updateMissions(getGamification());
+      g.totalCorrect += 1;
+      g.totalQuizComplete += 1;
+      g.dailyMissions = g.dailyMissions.map((m) => {
+        if (m.id === "correct_5") return { ...m, progress: Math.min(m.target, m.progress + 1) };
+        if (m.id === "listen_3") return { ...m, progress: Math.min(m.target, m.progress + 1) };
+        return m;
+      });
+      saveGamification(checkAchievements(addXp(g, 25), {}));
+    }
     setResults((prev) => [...prev, { item: currentItem, correct: isCorrect }]);
     setTimeout(() => {
       setQIdx((i) => i + 1);

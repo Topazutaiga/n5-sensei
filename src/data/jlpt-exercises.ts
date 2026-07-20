@@ -1,9 +1,10 @@
 export interface JLPTQuestion {
-  type: "vocab_reading" | "kanji_reading" | "sentence_completion" | "grammar_choice" | "reading_comp";
+  type: "vocab_reading" | "kanji_reading" | "sentence_completion" | "grammar_choice" | "reading_comp" | "star_ordering";
   question: string;
   context?: string;
   options: string[];
   answer: string;
+  starIndex?: number;
 }
 
 import { VOCAB, KANJI, GRAMMAR } from "./index";

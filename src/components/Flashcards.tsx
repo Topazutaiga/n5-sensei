@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { VOCAB, KANJI, GRAMMAR, type VocabItem, type KanjiItem, type GrammarItem } from "@/data";
 import { useI18n } from "@/lib/i18n";
+import { getGamification, saveGamification, addXp, checkAchievements, updateMissions } from "@/lib/gamification";
 
 type CardMode = "vocab" | "kanji" | "grammar";
 type CardData = VocabItem | KanjiItem | GrammarItem;
@@ -134,6 +135,29 @@ export default function Flashcards() {
     } else {
       localStorage.setItem("n5sensei_streak", JSON.stringify({ lastDate: today, count: 1 }));
     }
+
+    // Gamification: award XP
+    const xpMap = { 0: 5, 1: 10, 2: 15 };
+    const g = updateMissions(getGamification());
+    g.totalReviewed += 1;
+    const xpAmount = xpMap[level as keyof typeof xpMap] || 10;
+    let updated = addXp(g, xpAmount);
+    // Update daily mission progress
+    updated.dailyMissions = updated.dailyMissions.map((m) => {
+      if (m.id === "review_10") return { ...m, progress: Math.min(m.target, m.progress + 1) };
+      if (m.id === "correct_5" && level >= 1) return { ...m, progress: Math.min(m.target, m.progress + 1) };
+      return m;
+    });
+    updated = checkAchievements(updated, { [key]: { level: newLevel } });
+    // Merge streak from localStorage
+    const streakRaw2 = localStorage.getItem("n5sensei_streak");
+    if (streakRaw2) {
+      try {
+        const sd = JSON.parse(streakRaw2);
+        updated.streak = sd.count || 0;
+      } catch {}
+    }
+    saveGamification(updated);
 
     setIdx((i) => i + 1);
     setFlipped(false);

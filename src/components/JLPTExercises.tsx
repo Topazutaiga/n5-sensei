@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { getAllExercises, type JLPTQuestion } from "@/data/jlpt-exercises";
 import { useI18n } from "@/lib/i18n";
+import { getGamification, saveGamification, addXp, checkAchievements, updateMissions } from "@/lib/gamification";
 
 type ExerciseType = "all" | "vocab_reading" | "kanji_reading" | "sentence_completion" | "grammar_choice" | "reading_comp" | "lecture" | "phrase";
 
@@ -38,6 +39,18 @@ export default function JLPTExercises({ defaultType = "all", forcedModule }: { d
   useEffect(() => setMounted(true), []);
 
   const isAuto = defaultType === "lecture" || defaultType === "phrase";
+
+  // Award XP when exercises complete
+  useEffect(() => {
+    if (qIdx >= questions.length && questions.length > 0 && correct > 0) {
+      const g = updateMissions(getGamification());
+      g.dailyMissions = g.dailyMissions.map((m) => {
+        if (m.id === "quiz_1") return { ...m, progress: Math.min(m.target, m.progress + 1) };
+        return m;
+      });
+      saveGamification(checkAchievements(addXp(g, correct * 5), {}));
+    }
+  }, [qIdx, questions.length, correct]);
 
   const allExercises = useMemo(() => mounted ? getAllExercises() : [], [mounted]);
 
@@ -78,7 +91,17 @@ export default function JLPTExercises({ defaultType = "all", forcedModule }: { d
     if (answered || qIdx >= questions.length) return;
     setAnswered(true);
     setSelectedAnswer(chosen);
-    if (chosen === questions[qIdx].answer) setCorrect((c) => c + 1);
+    const isCorrect = chosen === questions[qIdx].answer;
+    if (isCorrect) {
+      setCorrect((c) => c + 1);
+      const g = updateMissions(getGamification());
+      g.totalCorrect += 1;
+      g.dailyMissions = g.dailyMissions.map((m) => {
+        if (m.id === "correct_5") return { ...m, progress: Math.min(m.target, m.progress + 1) };
+        return m;
+      });
+      saveGamification(checkAchievements(addXp(g, 15), {}));
+    }
     setTimeout(() => {
       setQIdx((i) => i + 1);
       setAnswered(false);

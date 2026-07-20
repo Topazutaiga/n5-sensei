@@ -1,0 +1,14 @@
+{
+  "name": "N5 Sensei",
+  "short_name": "N5 Sensei",
+  "description": "Apprends le japonais niveau JLPT N5 - flashcards, quiz, écoute",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafaf9",
+  "theme_color": "#ef4444",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" }
+  ]
+}

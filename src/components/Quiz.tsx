@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { VOCAB, KANJI, GRAMMAR } from "@/data";
 import { useI18n } from "@/lib/i18n";
+import { getGamification, saveGamification, addXp, checkAchievements, updateMissions } from "@/lib/gamification";
 
 type QuizMode = "vocab" | "kanji" | "grammar" | "mixed";
 const ALL_DATA = { vocab: VOCAB, kanji: KANJI, grammar: GRAMMAR };
@@ -70,11 +71,34 @@ export default function Quiz({ forcedModule, forcedMode }: { forcedModule?: numb
     return shuffle([q.correct, ...q.wrongs]);
   }, [qIdx, questions]);
 
+  // Award XP when quiz completes
+  useEffect(() => {
+    if (qIdx >= questions.length && questions.length > 0 && correct > 0) {
+      const g = updateMissions(getGamification());
+      g.totalQuizComplete += 1;
+      g.dailyMissions = g.dailyMissions.map((m) => {
+        if (m.id === "quiz_1") return { ...m, progress: Math.min(m.target, m.progress + 1) };
+        return m;
+      });
+      saveGamification(checkAchievements(addXp(g, correct * 5), {}));
+    }
+  }, [qIdx, questions.length, correct]);
+
   function answer(chosen: string) {
     if (answered || !currQ) return;
     setAnswered(true);
     setSelectedAnswer(chosen);
-    if (chosen === currQ.correct) setCorrect((c) => c + 1);
+    const isCorrect = chosen === currQ.correct;
+    if (isCorrect) {
+      setCorrect((c) => c + 1);
+      const g = updateMissions(getGamification());
+      g.totalCorrect += 1;
+      g.dailyMissions = g.dailyMissions.map((m) => {
+        if (m.id === "correct_5") return { ...m, progress: Math.min(m.target, m.progress + 1) };
+        return m;
+      });
+      saveGamification(checkAchievements(addXp(g, 20), {}));
+    }
     setTimeout(() => {
       setQIdx((i) => i + 1);
       setAnswered(false);
