@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useI18n } from "@/lib/i18n";
-import { VOCAB, KANJI, GRAMMAR } from "@/data";
+import { VOCAB, KANJI, GRAMMAR, type VocabItem, type KanjiItem, type GrammarItem } from "@/data";
 import { getGamification, getLevelProgress, updateMissions, type GamificationState } from "@/lib/gamification";
+import Mascot from "@/components/Mascot";
 
 const TOTAL_CARDS = VOCAB.length + KANJI.length + GRAMMAR.length;
 
@@ -70,6 +71,9 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-5 pb-24">
+      {/* Mascot */}
+      <Mascot gam={gam} dueCards={dueCards} showLevelUp={true} />
+
       {/* Level & XP Card */}
       <div className="bg-gradient-to-br from-red-500 to-orange-400 rounded-2xl p-5 text-white shadow-lg">
         <div className="flex items-center justify-between mb-3">

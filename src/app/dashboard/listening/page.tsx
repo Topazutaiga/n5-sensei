@@ -1,7 +1,25 @@
-import ListeningExercise from "@/components/ListeningExercise";
+"use client";
 
-export const metadata = { title: "Écoute - N5 Sensei" };
+import ListeningExercise from "@/components/ListeningExercise";
+import Mascot from "@/components/Mascot";
+import { getGamification } from "@/lib/gamification";
+import { useEffect, useState } from "react";
 
 export default function ListeningPage() {
-  return <ListeningExercise />;
+  const [mounted, setMounted] = useState(false);
+  const [gam, setGam] = useState(getGamification());
+
+  useEffect(() => {
+    setMounted(true);
+    setGam(getGamification());
+  }, []);
+
+  return (
+    <div>
+      {mounted && (
+        <Mascot gam={gam} compact className="mb-4" />
+      )}
+      <ListeningExercise />
+    </div>
+  );
 }

@@ -1,7 +1,25 @@
-import ExercicesTabs from "@/components/ExercicesTabs";
+"use client";
 
-export const metadata = { title: "Exercices - N5 Sensei" };
+import ExercicesTabs from "@/components/ExercicesTabs";
+import Mascot from "@/components/Mascot";
+import { getGamification } from "@/lib/gamification";
+import { useEffect, useState } from "react";
 
 export default function ExercisesPage() {
-  return <ExercicesTabs />;
+  const [mounted, setMounted] = useState(false);
+  const [gam, setGam] = useState(getGamification());
+
+  useEffect(() => {
+    setMounted(true);
+    setGam(getGamification());
+  }, []);
+
+  return (
+    <div>
+      {mounted && (
+        <Mascot gam={gam} compact className="mb-4" />
+      )}
+      <ExercicesTabs />
+    </div>
+  );
 }
