@@ -212,27 +212,29 @@ export default function Mascot({ gam, dueCards = 0, className = "", compact = fa
     <div className={`relative transition-all duration-500 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"} ${className}`}>
       <div className={`flex items-start gap-3 ${animating ? "animate-bounce" : ""}`}>
         {/* Character avatar */}
-        <div className="flex-shrink-0 w-14 h-14 rounded-full bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900/30 dark:to-orange-900/30 flex items-center justify-center text-3xl shadow-sm border-2 border-red-200 dark:border-red-800">
+        <div className={`flex-shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-red-100 to-orange-100 dark:from-red-900/30 dark:to-orange-900/30 flex items-center justify-center text-3xl shadow-md border-2 border-red-200 dark:border-red-800 transition-all duration-300 ${
+          msg.mood === "excited" || msg.mood === "celebrate" ? "scale-110" : ""
+        }`}>
           {moodEmoji[msg.mood]}
         </div>
 
         {/* Speech bubble */}
         <div className="flex-1 relative">
-          <div className="bg-white dark:bg-[#252220] rounded-2xl rounded-tl-sm p-4 shadow-md border border-gray-100 dark:border-gray-800">
+          <div className="glass-card-strong rounded-2xl rounded-tl-sm p-4">
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2 mb-1.5">
-                <div className="px-2 py-0.5 rounded-full bg-gradient-to-r from-red-500 to-orange-400 text-white text-[10px] font-bold">
+                <div className="px-2 py-0.5 rounded-full bg-gradient-to-r from-red-500 to-orange-400 text-white text-[10px] font-bold shadow-sm">
                   SENSEI
                 </div>
                 {gam && (
-                  <span className="text-[10px] text-gray-400">
+                  <span className="text-[10px] text-gray-400 font-medium">
                     Niveau {gam.level} · {gam.xp} XP
                   </span>
                 )}
               </div>
               <button
                 onClick={() => setVisible(false)}
-                className="text-gray-300 hover:text-gray-500 text-sm leading-none flex-shrink-0"
+                className="text-gray-300 hover:text-gray-500 text-sm leading-none flex-shrink-0 transition-colors"
               >
                 ✕
               </button>
@@ -243,7 +245,7 @@ export default function Mascot({ gam, dueCards = 0, className = "", compact = fa
             </p>
           </div>
           {/* Arrow */}
-          <div className="absolute left-[-6px] top-3 w-3 h-3 bg-white dark:bg-[#252220] border-l border-b border-gray-100 dark:border-gray-800 transform -rotate-45" />
+          <div className="absolute left-[-6px] top-4 w-3 h-3 bg-white dark:bg-[#252220] border-l border-b border-gray-100 dark:border-gray-800 transform -rotate-45 backdrop-blur-sm" />
         </div>
       </div>
     </div>

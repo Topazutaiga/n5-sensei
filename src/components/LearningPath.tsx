@@ -9,16 +9,17 @@ interface PathNode {
   href: string;
   icon: string;
   label: string;
-  bgColor: string;
+  bgGradient: string;
+  shadowColor: string;
   desc: string;
   estimate: string;
 }
 
 const PATH_NODES: PathNode[] = [
-  { href: "/dashboard/learn", icon: "⚡", label: "Flashcards", bgColor: "from-green-400 to-emerald-500", desc: "Vocab, kanji, grammaire", estimate: "5-10 min" },
-  { href: "/dashboard/quiz", icon: "📝", label: "Quiz", bgColor: "from-purple-400 to-violet-500", desc: "Quiz de lecture", estimate: "3-5 min" },
-  { href: "/dashboard/listening", icon: "🔊", label: "Écoute", bgColor: "from-orange-400 to-amber-500", desc: "Phrases et dialogues", estimate: "5-8 min" },
-  { href: "/dashboard/exercises", icon: "🎯", label: "Exercices", bgColor: "from-red-400 to-rose-500", desc: "Type examen JLPT", estimate: "5-10 min" },
+  { href: "/dashboard/learn", icon: "⚡", label: "Flashcards", bgGradient: "from-green-400 to-emerald-500", shadowColor: "rgba(34,197,94,0.3)", desc: "Vocabulaire, kanji, grammaire", estimate: "5-10 min" },
+  { href: "/dashboard/quiz", icon: "📝", label: "Quiz", bgGradient: "from-violet-400 to-purple-500", shadowColor: "rgba(168,85,247,0.3)", desc: "Teste tes lectures", estimate: "3-5 min" },
+  { href: "/dashboard/listening", icon: "🔊", label: "Écoute", bgGradient: "from-orange-400 to-amber-500", shadowColor: "rgba(249,115,22,0.3)", desc: "Phrases et dialogues N5", estimate: "5-8 min" },
+  { href: "/dashboard/exercises", icon: "🎯", label: "Exercices JLPT", bgGradient: "from-rose-400 to-red-500", shadowColor: "rgba(239,68,68,0.3)", desc: "Type examen", estimate: "5-10 min" },
 ];
 
 interface LearningPathProps {
@@ -32,71 +33,84 @@ export default function LearningPath({ gam, dueCards }: LearningPathProps) {
   useEffect(() => setMounted(true), []);
 
   const totalReviewed = gam?.totalReviewed || 0;
-  // Consider a node "completed" if user has done it at least once
-  const nodeProgress = {
-    "/dashboard/learn": totalReviewed > 0 ? "completed" as const : (totalReviewed > 0 ? "completed" as const : "available" as const),
-    "/dashboard/quiz": (gam?.totalQuizComplete || 0) > 0 ? "completed" as const : (totalReviewed > 5 ? "available" as const : "locked" as const),
-    "/dashboard/listening": (gam?.totalCorrect || 0) > 3 ? "completed" as const : (totalReviewed > 10 ? "available" as const : "locked" as const),
-    "/dashboard/exercises": (gam?.totalCorrect || 0) > 5 ? "completed" as const : (totalReviewed > 15 ? "available" as const : "locked" as const),
+  const totalQuiz = gam?.totalQuizComplete || 0;
+  const totalCorrect = gam?.totalCorrect || 0;
+
+  const getState = (minReviewed: number, minActions: number, href: string): "locked" | "available" | "current" | "completed" => {
+    if (pathname.startsWith(href)) return "current";
+    if (href === "/dashboard/learn") return totalReviewed > 0 ? "completed" : "available";
+    const act = href === "/dashboard/quiz" ? totalQuiz : totalCorrect;
+    if (act > 0) return "completed";
+    if (totalReviewed >= minReviewed) return "available";
+    return "locked";
   };
 
   if (!mounted) return null;
 
   return (
-    <div className="relative py-2">
-      {/* Vertical path line */}
-      <div className="absolute left-[23px] top-10 bottom-10 w-[3px] bg-gradient-to-b from-green-400 via-purple-400 via-orange-400 to-red-400 rounded-full opacity-30" />
+    <div className="relative py-1">
+      {/* Vertical connecting line */}
+      <div className="absolute left-[25px] top-12 bottom-12 w-[3px] bg-gradient-to-b from-green-400 via-purple-400 via-orange-400 to-red-400 rounded-full opacity-20" />
 
-      <div className="space-y-0">
+      <div className="space-y-3">
         {PATH_NODES.map((node, i) => {
-          const state = pathname.startsWith(node.href) ? "current" : nodeProgress[node.href as keyof typeof nodeProgress];
+          const thresholds = [[0, 0], [5, 0], [10, 3], [15, 5]];
+          const state = getState(thresholds[i][0], thresholds[i][1], node.href);
           const isLocked = state === "locked";
           const isCompleted = state === "completed";
           const isCurrent = state === "current";
 
           return (
-            <div key={node.href} className="relative flex items-start gap-4 pb-8 last:pb-0">
-              {/* Node circle */}
+            <div key={node.href} className="relative flex items-start gap-4">
+              {/* Step circle */}
               <Link
                 href={isLocked ? "#" : node.href}
-                className={`relative z-10 flex-shrink-0 w-[50px] h-[50px] rounded-full flex items-center justify-center text-xl font-bold shadow-lg transition-all duration-300 ${
-                  isLocked
-                    ? "bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed opacity-60"
-                    : isCompleted
-                    ? `bg-gradient-to-br ${node.bgColor} text-white shadow-md`
-                    : `bg-gradient-to-br ${node.bgColor} text-white shadow-md animate-pulse-soft`
-                } ${isCurrent ? "ring-4 ring-offset-2 ring-offset-[#fdf6f0] dark:ring-offset-[#1c1a18] ring-green-400 scale-110" : ""}`}
                 onClick={(e) => { if (isLocked) e.preventDefault(); }}
+                className={`relative z-10 flex-shrink-0 w-[52px] h-[52px] rounded-2xl flex items-center justify-center text-2xl font-bold transition-all duration-300 ${
+                  isLocked
+                    ? "bg-gray-200/50 dark:bg-gray-800/50 text-gray-400 cursor-not-allowed"
+                    : isCompleted
+                    ? `bg-gradient-to-br ${node.bgGradient} text-white shadow-lg`
+                    : `bg-gradient-to-br ${node.bgGradient} text-white shadow-lg animate-pulse-soft`
+                } ${isCurrent ? "ring-4 ring-offset-2 ring-offset-[#fdf6f0] dark:ring-offset-[#1c1a18] ring-green-400 scale-110" : ""}`}
+                style={isCompleted || isCurrent ? { boxShadow: `0 4px 16px ${node.shadowColor}` } : {}}
               >
-                {isCompleted ? "✓" : node.icon}
+                {isCompleted ? "✓" : isLocked ? "🔒" : node.icon}
               </Link>
 
               {/* Content card */}
               <Link
                 href={isLocked ? "#" : node.href}
-                className={`flex-1 min-w-0 rounded-2xl p-4 border-2 transition-all duration-300 ${
-                  isLocked
-                    ? "bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-800 opacity-50"
-                    : isCurrent
-                    ? "bg-white dark:bg-[#252220] border-green-400 dark:border-green-600 shadow-lg shadow-green-200/20 dark:shadow-green-900/20"
-                    : "bg-white dark:bg-[#252220] border-gray-100 dark:border-gray-800 hover:border-green-300 hover:shadow-md"
-                }`}
                 onClick={(e) => { if (isLocked) e.preventDefault(); }}
+                className={`flex-1 min-w-0 rounded-2xl p-4 transition-all duration-300 ${
+                  isLocked
+                    ? "glass-card opacity-50 cursor-not-allowed"
+                    : isCurrent
+                    ? "glass-card-strong border-green-300 dark:border-green-700 shadow-lg"
+                    : "glass-card hover:shadow-md"
+                }`}
               >
                 <div className="flex items-center justify-between mb-1">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-sm">{node.label}</span>
-                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                       isCompleted ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" :
                       isLocked ? "bg-gray-100 dark:bg-gray-800 text-gray-400" :
                       "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
                     }`}>
-                      {isCompleted ? "Fait ✓" : isLocked ? "🔒" : "À faire"}
+                      {isCompleted ? "Complété" : isLocked ? "Fermé" : "Disponible"}
                     </span>
                   </div>
-                  <span className="text-[10px] text-gray-400">{node.estimate}</span>
+                  <span className="text-[10px] text-gray-400 font-medium">{node.estimate}</span>
                 </div>
-                <p className="text-xs text-gray-500">{node.desc}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{node.desc}</p>
+                {isCompleted && (
+                  <div className="flex items-center gap-1 mt-2">
+                    <span className="text-[10px] text-green-500 font-semibold">✓ Terminé</span>
+                    <span className="text-[10px] text-gray-300">•</span>
+                    <span className="text-[10px] text-gray-400">+25 XP</span>
+                  </div>
+                )}
               </Link>
             </div>
           );

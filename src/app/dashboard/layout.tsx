@@ -7,6 +7,7 @@ import { useEffect, useState, useCallback } from "react";
 import { I18nProvider, useI18n } from "@/lib/i18n";
 import SakuraPetals from "@/components/SakuraPetals";
 import HeartsDisplay from "@/components/HeartsDisplay";
+import CelebrationToast from "@/components/CelebrationToast";
 import type { VocabItem, KanjiItem, GrammarItem } from "@/data";
 
 const NAV_ITEMS = [
@@ -123,43 +124,45 @@ function DashboardNav({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-[#1a1816] dark:to-[#1e1b18]">
+    <div className="min-h-screen">
       <SakuraPetals />
+      <CelebrationToast />
       <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} />
 
       {/* Top header */}
-      <header className="sticky top-0 z-50 backdrop-blur-lg bg-white/80 dark:bg-[#1a1816]/80 border-b border-gray-100 dark:border-gray-800">
+      <header className="sticky top-0 z-50 glass-card-strong border-b border-red-100/30 dark:border-red-900/20">
         <div className="flex items-center justify-between px-4 py-3 max-w-lg mx-auto">
-          <Link href="/dashboard" className="text-xl font-bold">
-            N5 <span className="bg-gradient-to-r from-red-500 to-orange-400 bg-clip-text text-transparent">Sensei</span>
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-orange-400 flex items-center justify-center text-white text-sm font-bold shadow-sm">N5</div>
+            <span className="text-lg font-bold gradient-text">Sensei</span>
           </Link>
           <div className="flex items-center gap-1.5">
             <HeartsDisplay compact />
             <button
               onClick={() => setSearchOpen(true)}
-              className="w-9 h-9 flex items-center justify-center rounded-full text-base hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              className="w-9 h-9 flex items-center justify-center rounded-full text-base hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
               title={lang === "en" ? "Search" : "Rechercher"}
             >
               🔍
             </button>
             <button
               onClick={toggleLang}
-              className="px-3 py-1.5 rounded-full text-xs font-bold border-2 border-gray-200 dark:border-gray-700 hover:border-red-300 transition-colors flex-shrink-0"
+              className="px-3 py-1.5 rounded-full text-xs font-bold border border-gray-200 dark:border-gray-700 hover:border-red-300 transition-colors flex-shrink-0"
             >
               {lang === "fr" ? "🇬🇧 EN" : "🇫🇷 FR"}
             </button>
             <div className="relative">
               <button
                 onClick={() => setMenuOpen(!menuOpen)}
-                className="w-9 h-9 flex items-center justify-center rounded-full text-base hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                className="w-9 h-9 flex items-center justify-center rounded-full text-base hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
               >
                 ⚙️
               </button>
               {menuOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 z-50 bg-white dark:bg-[#252220] rounded-xl shadow-xl border border-gray-100 dark:border-gray-800 py-1 w-36">
-                    <button onClick={() => { setMenuOpen(false); logout(); }} className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-gray-50 dark:hover:bg-gray-800 font-medium">
+                  <div className="absolute right-0 top-full mt-1 z-50 glass-card-strong rounded-xl shadow-xl border border-red-100/30 dark:border-red-900/20 py-1 w-36">
+                    <button onClick={() => { setMenuOpen(false); logout(); }} className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-black/5 dark:hover:bg-white/5 font-medium">
                       🚪 {t("logout")}
                     </button>
                   </div>
@@ -173,8 +176,8 @@ function DashboardNav({ children }: { children: React.ReactNode }) {
       {/* Main content */}
       <main className="max-w-lg mx-auto px-4 py-5 pb-24">{children}</main>
 
-      {/* Bottom Navigation Bar (mobile-first) */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#1a1816]/95 backdrop-blur-lg border-t border-gray-100 dark:border-gray-800 pb-safe">
+      {/* Bottom Navigation Bar */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 glass-card-strong border-t border-red-100/20 dark:border-red-900/10 pb-safe">
         <div className="max-w-lg mx-auto flex items-center justify-around px-2 py-1">
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href;
@@ -188,11 +191,11 @@ function DashboardNav({ children }: { children: React.ReactNode }) {
                     : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 }`}
               >
-                <span className={`text-xl transition-transform ${isActive ? "scale-110" : ""}`}>{item.icon}</span>
+                <span className={`text-xl transition-transform duration-200 ${isActive ? "scale-110" : ""}`}>{item.icon}</span>
                 <span className={`text-[10px] font-semibold leading-tight ${isActive ? "opacity-100" : "opacity-70"}`}>
                   {t(item.labelKey)}
                 </span>
-                {isActive && <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-red-500 to-orange-400 mt-0.5" />}
+                {isActive && <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-red-500 to-orange-400 mt-0.5 animate-fade-in" />}
               </Link>
             );
           })}
